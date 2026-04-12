@@ -1,0 +1,75 @@
+{
+  "策划直播": {
+    "skill_name": "策划直播",
+    "total_executions": 10,
+    "successful_executions": 7,
+    "failed_executions": 3,
+    "total_execution_time_ms": 14500,
+    "last_execution": "2026-04-10T11:12:46.937491",
+    "user_feedbacks": [
+      {
+        "feedback": "good",
+        "timestamp": "2026-04-10T11:12:46.931259",
+        "success": true
+      },
+      {
+        "feedback": "good",
+        "timestamp": "2026-04-10T11:12:46.931577",
+        "success": true
+      },
+      {
+        "feedback": "good",
+        "timestamp": "2026-04-10T11:12:46.933990",
+        "success": true
+      },
+      {
+        "feedback": "good",
+        "timestamp": "2026-04-10T11:12:46.934478",
+        "success": true
+      },
+      {
+        "feedback": "good",
+        "timestamp": "2026-04-10T11:12:46.934944",
+        "success": true
+      },
+      {
+        "feedback": "good",
+        "timestamp": "2026-04-10T11:12:46.935473",
+        "success": true
+      },
+      {
+        "feedback": "good",
+        "timestamp": "2026-04-10T11:12:46.935939",
+        "success": true
+      },
+      {
+        "feedback": "needs improvement",
+        "timestamp": "2026-04-10T11:12:46.936397",
+        "success": false
+      },
+      {
+        "feedback": "needs improvement",
+        "timestamp": "2026-04-10T11:12:46.936990",
+        "success": false
+      },
+      {
+        "feedback": "needs improvement",
+        "timestamp": "2026-04-10T11:12:46.937501",
+        "success": false
+      }
+    ],
+    "evolution_history": [
+      {
+        "reason": "user_feedback",
+        "details": "连续 3 次负面反馈",
+        "triggered_at": "2026-04-10T11:12:46.938156"
+      },
+      {
+        "reason": "user_feedback",
+        "details": "连续 3 次负面反馈",
+        "triggered_at": "2026-04-10T11:12:46.938697"
+      }
+    ],
+    "created_at": "2026-04-10T11:12:46.931241"
+  }
+}

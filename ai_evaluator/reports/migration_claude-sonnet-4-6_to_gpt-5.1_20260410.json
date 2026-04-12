@@ -1,0 +1,93 @@
+{
+  "evaluation_date": "2026-04-10T11:02:36.312811",
+  "from_model": "claude-sonnet-4-6",
+  "to_model": "gpt-5.1",
+  "performance_comparison": {
+    "model_a": "claude-sonnet-4-6",
+    "model_b": "gpt-5.1",
+    "test_cases": [
+      {
+        "name": "代码生成",
+        "model_a_score": 0.9099999999999999,
+        "model_b_score": 0.9299999999999999,
+        "model_a_latency_ms": 386,
+        "model_b_latency_ms": 478
+      },
+      {
+        "name": "文本分析",
+        "model_a_score": 0.9099999999999999,
+        "model_b_score": 0.9299999999999999,
+        "model_a_latency_ms": 386,
+        "model_b_latency_ms": 478
+      },
+      {
+        "name": "逻辑推理",
+        "model_a_score": 0.9099999999999999,
+        "model_b_score": 0.9299999999999999,
+        "model_a_latency_ms": 386,
+        "model_b_latency_ms": 478
+      }
+    ],
+    "model_a_avg_score": 0.9099999999999998,
+    "model_b_avg_score": 0.93,
+    "winner": "gpt-5.1"
+  },
+  "cost_comparison": {
+    "model_a": "claude-sonnet-4-6",
+    "model_a_price": {
+      "input": 3.0,
+      "output": 15.0
+    },
+    "model_b": "gpt-5.1",
+    "model_b_price": {
+      "input": 2.0,
+      "output": 8.0
+    },
+    "estimated_monthly_usage": {
+      "input_tokens_million": 100,
+      "output_tokens_million": 50
+    },
+    "model_a_monthly_cost": 1050.0,
+    "model_b_monthly_cost": 600.0,
+    "cost_saving": 450.0,
+    "cost_saving_percent": 42.857142857142854
+  },
+  "compatibility": {
+    "from_provider": "anthropic",
+    "to_provider": "openai",
+    "api_differences": [
+      {
+        "type": "provider_change",
+        "description": "Provider 从 anthropic 变为 openai",
+        "impact": "medium",
+        "migration_steps": [
+          "更新 API base URL",
+          "更新 API key 配置",
+          "检查请求格式差异"
+        ]
+      }
+    ],
+    "breaking_changes": [
+      {
+        "type": "missing_features",
+        "description": "缺失功能：{'vision'}",
+        "impact": "high"
+      }
+    ],
+    "missing_features": [
+      "vision"
+    ],
+    "new_features": [],
+    "compatibility_score": 70
+  },
+  "recommendation": {
+    "recommendation": "升级",
+    "reason": "综合评估推荐迁移",
+    "total_score": 0.9099999999999999,
+    "performance_score": 1,
+    "cost_score": 1,
+    "compatibility_score": 0.7,
+    "key_factors": []
+  },
+  "migration_effort": "中"
+}

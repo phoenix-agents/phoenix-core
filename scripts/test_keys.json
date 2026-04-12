@@ -1,0 +1,77 @@
+[
+  {
+    "license_key": "PHOENIX-STD-TEST-C11D-24C1",
+    "license_type": "standard",
+    "serial": 1,
+    "expiry_date": "2026-05-12T16:17:06.116844",
+    "days": 30,
+    "features": [
+      "cloud_sync",
+      "monitoring",
+      "support",
+      "10_bots"
+    ],
+    "created_at": "2026-04-12T16:17:06.116869",
+    "status": "available"
+  },
+  {
+    "license_key": "PHOENIX-STD-TEST-BE3B-ADA7",
+    "license_type": "standard",
+    "serial": 2,
+    "expiry_date": "2026-05-12T16:17:06.116889",
+    "days": 30,
+    "features": [
+      "cloud_sync",
+      "monitoring",
+      "support",
+      "10_bots"
+    ],
+    "created_at": "2026-04-12T16:17:06.116895",
+    "status": "available"
+  },
+  {
+    "license_key": "PHOENIX-STD-TEST-700A-B559",
+    "license_type": "standard",
+    "serial": 3,
+    "expiry_date": "2026-05-12T16:17:06.116906",
+    "days": 30,
+    "features": [
+      "cloud_sync",
+      "monitoring",
+      "support",
+      "10_bots"
+    ],
+    "created_at": "2026-04-12T16:17:06.116910",
+    "status": "available"
+  },
+  {
+    "license_key": "PHOENIX-STD-TEST-B36C-778F",
+    "license_type": "standard",
+    "serial": 4,
+    "expiry_date": "2026-05-12T16:17:06.116918",
+    "days": 30,
+    "features": [
+      "cloud_sync",
+      "monitoring",
+      "support",
+      "10_bots"
+    ],
+    "created_at": "2026-04-12T16:17:06.116922",
+    "status": "available"
+  },
+  {
+    "license_key": "PHOENIX-STD-TEST-C2AD-1231",
+    "license_type": "standard",
+    "serial": 5,
+    "expiry_date": "2026-05-12T16:17:06.116931",
+    "days": 30,
+    "features": [
+      "cloud_sync",
+      "monitoring",
+      "support",
+      "10_bots"
+    ],
+    "created_at": "2026-04-12T16:17:06.116934",
+    "status": "available"
+  }
+]

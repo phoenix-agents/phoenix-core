@@ -1,0 +1,257 @@
+# ========== 敏感信息（严禁提交）==========
+.env
+.env.local
+.env.*.local
+config.json
+workspaces/*/.env
+bot_ids.json
+*.pem
+*.key
+*.p12
+*.pfx
+
+# ========== 日志文件 ==========
+logs/
+*.log
+workspaces/*/*.log
+dashboard/*.log
+
+# ========== 共享记忆数据 ==========
+shared_memory/
+!shared_memory/.gitkeep
+shared_memory/logs/
+shared_memory/*.md
+shared_memory/*.db
+
+# ========== 缓存和临时文件 ==========
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ========== IDE 和编辑器 ==========
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# ========== 测试和覆盖率 ==========
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# ========== Jupyter Notebook ==========
+.ipynb_checkpoints/
+
+# ========== 虚拟环境 ==========
+venv/
+ENV/
+env/
+.venv/
+
+# ========== 任务队列和临时数据 ==========
+.task_queue/
+.tmp/
+temp/
+.cache/
+
+# ========== 数据库文件（SQLite）==========
+*.db
+!*_test.db
+*.sqlite
+*.sqlite3
+
+# ========== 仪表板构建产物 ==========
+dashboard/dist/
+dashboard/build/
+dashboard/node_modules/
+
+# ========== 其他 ==========
+*.orig
+*~
+nohup.out
+Thumbs.db
+
+# ========== PID 文件和状态文件 ==========
+.pids/
+.pid
+.state
+*.state
+*.lock
+
+# ========== OpenClaw 相关 ==========
+.openclaw/
+
+# ========== 用户工作区数据（禁止上传）==========
+workspaces/
+!workspaces/.gitkeep
+
+# ========== 技能市场数据（禁止上传）==========
+skill_market/
+!skill_market/.gitkeep
+
+# ========== 缓存数据（禁止上传）==========
+cache/
+!cache/.gitkeep
+
+# ========== 个人数据（禁止上传）==========
+memories/
+!memories/.gitkeep
+cron/
+!cron/.gitkeep
+demo_data/
+tech_radar/
+sandbox/
+!sandbox/.gitkeep
+
+# ========== 特定项目数据文件 ==========
+birthday_v5_messages.json
+discord_channel_history.json
+verified_skills.json
+
+# ========== 个人报告文档（不上传）==========
+ACTION_COMPLETED_REPORT.md
+AUTOMATIC_LEARNING.md
+BOT_CONTEXT_FIX.md
+BOT_DIFFERENTIATION_REPORT.md
+CODE_REVIEW_PHASE1.md
+CODE_REVIEW_REPORT.md
+DISCORD_SYNC_README.md
+FAILURE_ANALYSIS_USAGE.md
+FEATURE_GAP_ANALYSIS.md
+FINAL_TODO_SUMMARY.md
+HEALTH_CHECK_REPORT.md
+MAC_OPTIMIZATION_GUIDE.md
+MCP_SERVERS_CLEANUP.md
+MCP_SERVERS_INSTALL.md
+MEMORY_SYSTEM_IMPROVEMENTS.md
+MISSING_FILES_CHECKLIST.md
+NEXT_STEPS_NOW.md
+ORGANIZATION_SETUP_GUIDE.md
+PATH_FIX_SUMMARY.md
+PAYMENT_INTEGRATION_GUIDE.md
+PHASE1_COMPLETION_SUMMARY.md
+PHASE1_TEST_REPORT.md
+PHASE1_USER_GUIDE.md
+PHASE2_COMPLETION_REPORT.md
+PHASE2_IMPLEMENTATION.md
+PHASE2_PLAN.md
+PHASE2_PROGRESS_1.md
+PHASE3_COMPLETION_REPORT.md
+PROBLEM_LEARNING_IMPROVEMENTS.md
+RELEASE_CHECKLIST.md
+RELEASE_GUIDE.md
+RELEASE_PREPARATION_SUMMARY.md
+RELEASE_READY.md
+SERVER_REQUIREMENTS_ANALYSIS.md
+TEAM_AND_RELEASE_PLAN.md
+TEST_COVERAGE_REPORT.md
+USER_FEEDBACK_CHANNELS.md
+USER_FEEDBACK_TELEMETRY_DESIGN.md
+TEST_REPORT_*.md
+FINAL_COMPLETION_REPORT.md
+FINAL_RELEASE_REPORT.md
+PHOENIX_V2_PHASE1_REPORT.md
+SECURITY_FIX_SUMMARY.md
+reflection_log.md
+
+# ========== 包含个人路径的文档（不上传）==========
+PHOENIX_ADMIN_GUIDE.md
+PHOENIX_SKILLS_CATALOG.md
+QUICKSTART.md
+SANDBOX.md
+SKILL_SYSTEM.md
+TASK_EVALUATION.md
+UNIFIED_MEMORY_CONFIG.md
+USER_GUIDE.md
+skills/INSTALL.md
+skills/README_SKILL_FORMATS.md
+skills/pls-office-docs/SKILL.md
+skills/SKILL.md
+find-skills/SKILL.md
+skill_evolution/evolution_log.md
+scripts/README_TEST_KEYS.md
+
+# ========== 包含个人路径的脚本（不上传）==========
+generate_all_bot_configs.py
+generate_bot_configs.py
+setup.py
+office_skill.py
+phoenix_core_gateway.py
+
+# ========== 包含个人路径的 Shell 脚本（不上传）==========
+bot_manager.sh
+clean_cache.sh
+clean_cache_aggressive.sh
+clean_cache_safe.sh
+cleanup_old_memory.sh
+quick_clean.sh
+setup_discord_sync.sh
+sync_manager.sh
+optimize_mac.sh
+scripts/sync-bot-memory.js
+
+# ========== 规划和发展文档（不上传）==========
+team_topology.py
+tech_radar.py
+tech_radar/
+
+# ========== 商业和品牌文档（不上传）==========
+BRAND_STRATEGY.md
+BUSINESS_PLAN.md
+COMMERCIALIZATION_SUMMARY.md
+GLOBAL_LAUNCH_CHANNELS.md
+IP_PROTECTION_AND_CONTROL.md
+IP_LEGAL_RISK_ANALYSIS.md
+LAUNCH_READINESS_ASSESSMENT.md
+LICENSE_KEY_EXPLAINED.md
+LICENSE_SECURITY_PLAN.md
+LICENSE_SECURITY_SUMMARY.md
+ORGANIZATION_SETUP_GUIDE.md
+PAYMENT_INTEGRATION_GUIDE.md
+PRODUCT_INTRODUCTION.md
+PRODUCT_VERSION_STRATEGY.md
+VERSION_COMPARISON.md
+
+# ========== 内部规划文档（不上传）==========
+BRAINSTORM_OPEN_ISSUES.md
+BRAINSTORM_SUMMARY.md
+PHOENIX_V2_STAFF_ASSIGNMENT.md
+PHOENIX_V2_TASK_BOARD.md
+PRE_LAUNCH_CHECKLIST.md
+PROJECT_RENAME.md
+QUALITY_FIRST_PLAN.md
+
+# ========== 其他语言版本（不上传）==========
+README.open source.md
+PHOENIX_CORE_完整功能清单.md
+PHOENIX_CORE_完整功能清单_详细说明.md
+PHOENIX_快速参考卡.md
+文档索引.md
+DOCUMENTATION_INDEX.md

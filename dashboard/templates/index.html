@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw Phoenix Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 40px; }
+        .header h1 { font-size: 24px; font-weight: 600; }
+        .header p { opacity: 0.9; margin-top: 5px; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 30px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .stat-card h3 { font-size: 14px; color: #666; margin-bottom: 10px; }
+        .stat-card .value { font-size: 32px; font-weight: 700; color: #333; }
+        .stat-card .change { font-size: 12px; color: #10b981; margin-top: 5px; }
+        .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px; }
+        .chart-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .chart-card h3 { font-size: 16px; color: #333; margin-bottom: 15px; }
+        .chart-container { position: relative; height: 300px; }
+        .failure-patterns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; }
+        .pattern-item { background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; }
+        .pattern-item .name { font-size: 13px; color: #666; margin-bottom: 5px; }
+        .pattern-item .count { font-size: 20px; font-weight: 600; color: #ef4444; }
+        .pattern-item .percentage { font-size: 12px; color: #999; }
+        .lineage-tree { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .lineage-tree h3 { font-size: 16px; color: #333; margin-bottom: 15px; }
+        .loading { text-align: center; padding: 50px; color: #666; }
+        .error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 15px; border-radius: 8px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>OpenClaw Phoenix Dashboard</h1>
+        <p>Hermes Learning Loop Analytics</p>
+    </div>
+
+    <div class="container">
+        <!-- Summary Statistics -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="loading">Loading statistics...</div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Task Assessment Score Trend</h3>
+                <div class="chart-container">
+                    <canvas id="assessmentChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>Skill Success Rate Trend</h3>
+                <div class="chart-container">
+                    <canvas id="skillChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Failure Patterns -->
+        <div class="chart-card" style="margin-bottom: 30px;">
+            <h3>Failure Pattern Analysis</h3>
+            <div class="failure-patterns" id="failurePatterns">
+                <div class="loading">Loading patterns...</div>
+            </div>
+        </div>
+
+        <!-- Skill Lineage -->
+        <div class="lineage-tree">
+            <h3>Skill Lineage Tree</h3>
+            <div id="lineageTree">
+                <div class="loading">Loading lineage...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+
+        async function loadDashboard() {
+            try {
+                await Promise.all([
+                    loadStats(),
+                    loadAssessmentTrend(),
+                    loadSkillSuccess(),
+                    loadFailurePatterns(),
+                    loadSkillLineage()
+                ]);
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+                document.getElementById('statsGrid').innerHTML =
+                    '<div class="error">Failed to load dashboard data. Make sure the backend is running.</div>';
+            }
+        }
+
+        async function loadStats() {
+            const response = await fetch(`${API_BASE}/stats`);
+            const data = await response.json();
+
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card">
+                    <h3>Total Tasks</h3>
+                    <div class="value">${data.total_tasks}</div>
+                    <div class="change">${data.completed_tasks} completed</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Pending Tasks</h3>
+                    <div class="value">${data.pending_tasks}</div>
+                    <div class="change">Awaiting evaluation</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Skills</h3>
+                    <div class="value">${data.total_skills}</div>
+                    <div class="change">${data.total_versions} versions</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Avg Success Rate</h3>
+                    <div class="value">${(data.avg_success_rate * 100).toFixed(0)}%</div>
+                    <div class="change">Across all skills</div>
+                </div>
+            `;
+        }
+
+        async function loadAssessmentTrend() {
+            const response = await fetch(`${API_BASE}/assessment-trend`);
+            const data = await response.json();
+
+            const ctx = document.getElementById('assessmentChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.data.map(d => d.date.slice(5)),
+                    datasets: [{
+                        label: 'Assessment Score',
+                        data: data.data.map(d => d.score),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: false, min: 50, max: 100 } }
+                }
+            });
+        }
+
+        async function loadSkillSuccess() {
+            const response = await fetch(`${API_BASE}/skill-success`);
+            const data = await response.json();
+
+            const skills = [...new Set(data.data.map(d => d.skill))];
+            const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe'];
+
+            const datasets = skills.map((skill, i) => ({
+                label: skill,
+                data: data.data.filter(d => d.skill === skill).map(d => ({x: d.date, y: d.success_rate * 100})),
+                borderColor: colors[i % colors.length],
+                tension: 0.4
+            }));
+
+            const ctx = document.getElementById('skillChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { type: 'time', time: { unit: 'day' } },
+                        y: { min: 50, max: 100 }
+                    }
+                }
+            });
+        }
+
+        async function loadFailurePatterns() {
+            const response = await fetch(`${API_BASE}/failure-patterns`);
+            const data = await response.json();
+
+            document.getElementById('failurePatterns').innerHTML = data.data.map(p => `
+                <div class="pattern-item">
+                    <div class="name">${p.pattern}</div>
+                    <div class="count">${p.count}</div>
+                    <div class="percentage">${p.percentage}% of failures</div>
+                    <div style="font-size: 12px; color: ${p.trend === 'up' ? '#ef4444' : '#10b981'}">Trend: ${p.trend}</div>
+                </div>
+            `).join('');
+        }
+
+        async function loadSkillLineage() {
+            const response = await fetch(`${API_BASE}/skill-lineage`);
+            const data = await response.json();
+            renderLineageTree(data.data);
+        }
+
+        function renderLineageTree(data) {
+            if (!data.children || data.children.length === 0) {
+                document.getElementById('lineageTree').innerHTML =
+                    '<div style="color: #999; padding: 20px;">No skill lineage data available</div>';
+                return;
+            }
+
+            let html = '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">';
+
+            data.children.forEach(category => {
+                html += `
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <h4 style="color: #667eea; margin-bottom: 10px;">${category.name}</h4>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                `;
+
+                if (category.children) {
+                    category.children.forEach(skill => {
+                        const versions = skill.versions || [];
+                        const latestVersion = versions[versions.length - 1];
+                        html += `
+                            <div style="background: white; padding: 10px; border-radius: 6px; flex: 1; min-width: 150px;">
+                                <div style="font-weight: 500; color: #333;">${skill.name}</div>
+                                <div style="font-size: 12px; color: #999; margin-top: 5px;">
+                                    ${latestVersion ? `v: ${latestVersion.name} | SR: ${(latestVersion.success_rate * 100).toFixed(0)}%` : 'No versions'}
+                                </div>
+                                <div style="font-size: 11px; color: #666; margin-top: 3px;">${versions.length} version(s)</div>
+                            </div>
+                        `;
+                    });
+                }
+
+                html += `</div></div>`;
+            });
+
+            html += '</div>';
+            document.getElementById('lineageTree').innerHTML = html;
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+</body>
+</html>

@@ -1,0 +1,349 @@
+"""
+SQLite + FTS5 全文搜索测试
+性能要求：搜索响应 < 100ms
+"""
+
+import sys
+import time
+from pathlib import Path
+
+# 添加项目根目录到路径
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from session_database import SessionDatabase, search_sessions
+
+
+class TestFTS5Search:
+    """FTS5 搜索功能测试"""
+
+    @pytest.fixture
+    def db(self):
+        """测试数据库（使用临时文件）"""
+        test_db = Path("/tmp/test_sessions.db")
+        if test_db.exists():
+            test_db.unlink()
+        database = SessionDatabase(test_db)
+        yield database
+        test_db.unlink()
+        """搜索性能测试：必须 < 100ms"""
+        # 准备测试数据
+        test_data = [
+            {"title": "生日直播策划", "content": "生日直播活动策划方案，流量密码解析", "tags": "直播"},
+            {"title": "流量密码研究", "content": "如何获取流量密码，提升直播间人气", "tags": "流量"},
+            {"title": "剪辑技巧", "content": "视频剪辑技巧与特效制作", "tags": "剪辑"},
+        ] * 100  # 300 条数据
+
+        db.bulk_import(test_data)
+
+        # 性能测试
+        start = time.time()
+        results = db.search("生日直播")
+        elapsed = time.time() - start
+
+        assert elapsed < 0.1, f"搜索太慢：{elapsed:.3f}s > 0.1s"
+        assert len(results) > 0, "搜索无结果"
+        print(f"✅ 搜索性能：{elapsed * 1000:.2f}ms ({len(results)} 结果)")
+
+    def test_chinese_search(self, db):
+        """中文检索测试"""
+        test_data = [
+            {"title": "生日会", "content": "策划生日会活动", "tags": ""},
+            {"title": "直播", "content": "直播间运营方案", "tags": ""},
+            {"title": "剪辑", "content": "视频剪辑教程", "tags": ""},
+        ]
+        db.bulk_import(test_data)
+
+        # 中文搜索
+        results = db.search("生日")
+        assert len(results) > 0, "中文检索无结果"
+        assert "生日" in results[0]["title"] or "生日" in results[0]["content"]
+
+    def test_relevance_ranking(self, db):
+        """相关性排序测试"""
+        test_data = [
+            {"title": "生日直播", "content": "生日直播完整流程", "tags": ""},  # 最相关
+            {"title": "直播日常", "content": "日常直播内容", "tags": ""},  # 部分相关
+            {"title": "生日蛋糕", "content": "生日蛋糕制作", "tags": ""},  # 部分相关
+        ]
+        db.bulk_import(test_data)
+
+        results = db.search("生日直播")
+        assert len(results) >= 1
+        # 标题完全匹配的应该排第一
+        assert results[0]["title"] == "生日直播"
+
+    def test_prefix_search(self, db):
+        """前缀搜索测试"""
+        test_data = [
+            {"title": "流量密码", "content": "获取流量的方法", "tags": ""},
+            {"title": "直播间人气", "content": "提升人气技巧", "tags": ""},
+        ]
+        db.bulk_import(test_data)
+
+        # 前缀匹配
+        results = db.search("流量")
+        assert len(results) > 0
+
+
+class TestSessionCRUD:
+    """会话 CRUD 操作测试"""
+
+    @pytest.fixture
+    def db(self):
+        test_db = Path("/tmp/test_sessions.db")
+        if test_db.exists():
+            test_db.unlink()
+        database = SessionDatabase(test_db)
+        yield database
+        test_db.unlink()
+
+    def test_add_session(self, db):
+        """添加会话测试"""
+        session_id = db.add_session(
+            title="测试会话",
+            content="这是测试内容",
+            source="test",
+            tags="测试，验证"
+        )
+        assert session_id > 0
+
+    def test_get_session(self, db):
+        """获取会话测试"""
+        session_id = db.add_session("获取测试", "测试内容")
+        session = db.get_session(session_id)
+
+        assert session is not None
+        assert session["title"] == "获取测试"
+        assert session["content"] == "测试内容"
+
+    def test_delete_session(self, db):
+        """删除会话测试"""
+        session_id = db.add_session("删除测试", "待删除内容")
+
+        result = db.delete_session(session_id)
+        assert result == True
+
+        # 验证已删除
+        session = db.get_session(session_id)
+        assert session is None
+
+    def test_list_sessions(self, db):
+        """列出会话测试"""
+        for i in range(15):
+            db.add_session(f"会话{i}", f"内容{i}")
+
+        sessions = db.list_sessions(limit=10)
+        assert len(sessions) == 10
+        # 应该是最新的 10 个
+        assert sessions[0]["title"] == "会话 14"
+
+    def test_list_sessions_by_source(self, db):
+        """按来源筛选会话"""
+        db.add_session("Discord 会话 1", "内容", source="discord")
+        db.add_session("Discord 会话 2", "内容", source="discord")
+        db.add_session("微信会话", "内容", source="wechat")
+
+        discord_sessions = db.list_sessions(source="discord")
+        assert len(discord_sessions) == 2
+
+
+class TestBulkImport:
+    """批量导入测试"""
+
+    @pytest.fixture
+    def db(self):
+        test_db = Path("/tmp/test_sessions.db")
+        if test_db.exists():
+            test_db.unlink()
+        database = SessionDatabase(test_db)
+        yield database
+        test_db.unlink()
+
+    def test_bulk_import_count(self, db):
+        """批量导入数量验证"""
+        test_data = [
+            {"title": f"文档{i}", "content": f"内容{i}", "tags": "批量"}
+            for i in range(100)
+        ]
+
+        count = db.bulk_import(test_data)
+        assert count == 100
+
+        stats = db.get_stats()
+        assert stats["total_sessions"] == 100
+
+    def test_bulk_import_10k(self, db):
+        """1 万条数据导入测试"""
+        test_data = [
+            {"title": f"万级测试{i}", "content": f"内容{i}" * 10, "tags": "压力"}
+            for i in range(10000)
+        ]
+
+        start = time.time()
+        count = db.bulk_import(test_data)
+        elapsed = time.time() - start
+
+        assert count == 10000
+        print(f"✅ 万级导入：{elapsed:.2f}s ({count / elapsed:.0f} 条/秒)")
+
+
+class TestSearchAdvanced:
+    """高级搜索功能测试"""
+
+    @pytest.fixture
+    def db(self):
+        test_db = Path("/tmp/test_sessions.db")
+        if test_db.exists():
+            test_db.unlink()
+        database = SessionDatabase(test_db)
+        yield database
+        test_db.unlink()
+
+    def test_multi_term_search(self, db):
+        """多词搜索测试"""
+        test_data = [
+            {"title": "生日直播", "content": "生日活动策划", "tags": ""},
+            {"title": "直播运营", "content": "直播技巧", "tags": ""},
+            {"title": "生日蛋糕", "content": "蛋糕制作", "tags": ""},
+        ]
+        db.bulk_import(test_data)
+
+        # OR 搜索
+        results = db.search("生日 直播")
+        assert len(results) >= 2
+
+    def test_special_chars_handling(self, db):
+        """特殊字符处理测试"""
+        test_data = [
+            {"title": "测试@#$", "content": "特殊字符!@#", "tags": ""},
+        ]
+        db.bulk_import(test_data)
+
+        # 不应报错
+        results = db.search("测试")
+        assert len(results) > 0
+
+
+class TestDatabaseStats:
+    """统计功能测试"""
+
+    @pytest.fixture
+    def db(self):
+        test_db = Path("/tmp/test_sessions.db")
+        if test_db.exists():
+            test_db.unlink()
+        database = SessionDatabase(test_db)
+        yield database
+        test_db.unlink()
+
+    def test_get_stats(self, db):
+        """获取统计测试"""
+        db.add_session("Discord1", "内容", source="discord")
+        db.add_session("Discord2", "内容", source="discord")
+        db.add_session("Wechat1", "内容", source="wechat")
+
+        stats = db.get_stats()
+
+        assert stats["total_sessions"] == 3
+        assert stats["by_source"]["discord"] == 2
+        assert stats["by_source"]["wechat"] == 1
+
+
+class TestEdgeCases:
+    """边界条件测试"""
+
+    @pytest.fixture
+    def db(self):
+        test_db = Path("/tmp/test_sessions.db")
+        if test_db.exists():
+            test_db.unlink()
+        database = SessionDatabase(test_db)
+        yield database
+        test_db.unlink()
+
+    def test_empty_search(self, db):
+        """空搜索测试"""
+        db.add_session("测试", "内容")
+
+        results = db.search("")
+        # 空搜索应返回空或全部（取决于实现）
+        assert isinstance(results, list)
+
+    def test_unicode_content(self, db):
+        """Unicode 内容测试"""
+        db.add_session("Emoji 测试", "内容🎉✨")
+        db.add_session("中文测试", "流量密码🔥")
+
+        results = db.search("流量")
+        assert len(results) > 0
+
+    def test_very_long_content(self, db):
+        """超长内容测试"""
+        long_content = "测试内容 " * 10000  # 约 40KB
+
+        session_id = db.add_session("长文档", long_content)
+        session = db.get_session(session_id)
+
+        assert session is not None
+        assert len(session["content"]) > 30000
+
+
+# ========== 性能基准测试 ==========
+
+class TestPerformanceBenchmark:
+    """性能基准测试"""
+
+    @pytest.fixture
+    def db_with_data(self):
+        test_db = Path("/tmp/test_benchmark.db")
+        if test_db.exists():
+            test_db.unlink()
+        database = SessionDatabase(test_db)
+
+        # 导入 1000 条数据
+        test_data = [
+            {"title": f"文档{i}", "content": f"生日直播 流量密码 内容{i}" * 5, "tags": "测试"}
+            for i in range(1000)
+        ]
+        database.bulk_import(test_data)
+
+        yield database
+        # 不删除，便于手动检查
+
+    def test_search_under_100ms(self, db_with_data):
+        """搜索必须在 100ms 内完成"""
+        for _ in range(5):  # 多次测试
+            start = time.time()
+            results = db_with_data.search("生日直播")
+            elapsed = time.time() - start
+
+            assert elapsed < 0.1, f"搜索超时：{elapsed:.3f}s"
+            assert len(results) > 0
+
+    def test_concurrent_search(self, db_with_data):
+        """并发搜索测试"""
+        import concurrent.futures
+
+        def search_task(query):
+            start = time.time()
+            results = db_with_data.search(query)
+            return time.time() - start, len(results)
+
+        queries = ["生日", "流量", "密码", "直播", "测试"]
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            futures = [executor.submit(search_task, q) for q in queries]
+            results = [f.result() for f in futures]
+
+        for elapsed, count in results:
+            assert elapsed < 0.1, f"并发搜索超时：{elapsed:.3f}s"
+            print(f"✅ 并发搜索：{elapsed * 1000:.2f}ms ({count} 结果)")
+
+
+if __name__ == "__main__":
+    pytest.main([
+        __file__,
+        "-v",
+        "--tb=short",
+        "--capture=no",
+    ])

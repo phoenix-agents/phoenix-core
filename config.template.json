@@ -1,0 +1,49 @@
+{
+  "_comment": "Phoenix Core 配置模板 - 复制此文件为 config.json 并填入你的配置",
+
+  "bots": {
+    "_comment": "在此定义你的 Bot 团队，可自定义名称和数量",
+    "示例 Bot 1": {
+      "model": "qwen3.5-plus",
+      "provider": "coding-plan",
+      "role": "content",
+      "description": "内容创作 Bot"
+    },
+    "示例 Bot 2": {
+      "model": "claude-sonnet-4-6",
+      "provider": "compshare",
+      "role": "operation",
+      "description": "运营分析 Bot"
+    }
+  },
+
+  "providers": {
+    "_comment": "填入你自己的 API Key",
+    "compshare": {
+      "base_url": "https://api.modelverse.cn/v1",
+      "api_key": "YOUR_COMPSHARE_API_KEY"
+    },
+    "coding-plan": {
+      "base_url": "https://coding.dashscope.aliyuncs.com/v1",
+      "api_key": "YOUR_CODING_PLAN_API_KEY"
+    },
+    "moonshot": {
+      "base_url": "https://api.moonshot.cn/v1",
+      "api_key": "YOUR_MOONSHOT_API_KEY"
+    }
+  },
+
+  "discord": {
+    "_comment": "如使用 Discord，填入你的 Bot Token 和 Client ID",
+    "enabled": false,
+    "bot_token": "YOUR_DISCORD_BOT_TOKEN",
+    "client_id": "YOUR_CLIENT_ID"
+  },
+
+  "default_provider": "coding-plan",
+
+  "telemetry": {
+    "_comment": "匿名使用统计，可选加入",
+    "opt_in": false
+  }
+}
