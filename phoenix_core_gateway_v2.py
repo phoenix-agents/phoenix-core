@@ -3,10 +3,10 @@
 Phoenix Core Gateway v2 - 框架核心
 
 职责：
-1. 管理所有渠道连接器 (ChannelPlugin)
-2. 消息路由到正确的 Agent
+1. 管理所有ChannelConnection器 (ChannelPlugin)
+2. Message路由到正确的 Agent
 3. 会话管理
-4. 技能执行
+4. Skill执行
 5. 记忆管理
 6. 共享上下文管理
 
@@ -31,7 +31,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from channels.base import ChannelPlugin, Message, ChannelConfig
 from channels.manager import ChannelManager
 
-# Phoenix Core 心跳
+# Phoenix Core Heartbeat
 from phoenix_core import write_heartbeat
 
 # Phoenix Core 记忆数据库
@@ -51,7 +51,7 @@ except ImportError:
     Orchestrator = None
     OrchestratorConfig = None
 
-# Phoenix Core P1 功能模块 (审计日志、链路追踪、进度汇报)
+# Phoenix Core P1 功能模块 (AuditLog、链路Trace、Progress汇报)
 try:
     from phoenix_core import (
         get_audit_logger,
@@ -76,7 +76,7 @@ except ImportError:
     CONFIG_LOADER_AVAILABLE = False
     get_config = None
 
-# Phoenix Core 远程调试集成 (Phase 3)
+# Phoenix Core RemoteDebug集成 (Phase 3)
 try:
     from phoenix_core.remote_integration import get_debugger, send_log, start_remote_debug
     REMOTE_DEBUG_AVAILABLE = True
@@ -97,7 +97,7 @@ class PhoenixCoreGateway:
     """
     Phoenix Core Gateway - 统一控制平面
 
-    所有业务逻辑都在这一层，渠道层只负责平台 API 对接
+    所有业务逻辑都在这一层，Channel层只负责平台 API 对接
 
     支持两种模式：
     1. ChannelManager 模式：管理多个 ChannelPlugin（多频道/多 bot）
@@ -109,7 +109,7 @@ class PhoenixCoreGateway:
         初始化 Phoenix Core Gateway
 
         Args:
-            workspace: 工作区路径
+            workspace: Workspace路径
             channel: 平台适配器（可选）
             bot_name: Bot 名称（可选，优先于从 workspace 推导）
         """
@@ -129,14 +129,14 @@ class PhoenixCoreGateway:
             config_loader = get_config()
             self.bot_config = config_loader.get_bot_by_name(self.bot_name)
             if self.bot_config:
-                logger.info(f"已加载 Bot 配置：{self.bot_name}")
+                logger.info(f"Loaded Bot config：{self.bot_name}")
                 # 如果 Bot 配置中有 workspace，更新 workspace 路径
                 if workspace is None and self.bot_config.get("workspace"):
                     self.workspace = Path(self.bot_config["workspace"])
                     self.workspace.mkdir(parents=True, exist_ok=True)
                     logger.info(f"使用配置中的 workspace: {self.workspace}")
         else:
-            logger.warning("配置加载器不可用，使用默认配置")
+            logger.warning("Config loader not available，Using default config")
 
         # Load .env file from workspace directory
         from dotenv import load_dotenv
@@ -152,7 +152,7 @@ class PhoenixCoreGateway:
         self._platform_channel = channel
         if self._platform_channel:
             logger.info(f"使用平台适配器：{self._platform_channel.platform_name}")
-            # 注册消息回调
+            # 注册Message回调
             asyncio.create_task(self._register_platform_message_callback())
         # ====================================
 
@@ -163,8 +163,8 @@ class PhoenixCoreGateway:
         # Load configuration
         self.config = self._load_config()
 
-        # ========== 协调者自动识别（新增） ==========
-        # 加载所有 Bot 配置，识别协调者
+        # ========== Coordinator自动识别（新增） ==========
+        # 加载所有 Bot 配置，识别Coordinator
         self._all_bots = []
         self._coordinator_name = None
         self._is_coordinator = False
@@ -183,15 +183,15 @@ class PhoenixCoreGateway:
             if not self._coordinator_name and self._all_bots:
                 self._coordinator_name = self._all_bots[0].get("name")
 
-            # 判断当前 Bot 是否是协调者
+            # 判断当前 Bot 是否是Coordinator
             if self._coordinator_name and self.bot_name == self._coordinator_name:
                 self._is_coordinator = True
-                logger.info(f"自动识别：当前 Bot '{self.bot_name}' 是协调者")
+                logger.info(f"自动识别：当前 Bot '{self.bot_name}' 是Coordinator")
                 logger.info(f"系统共有 {len(self._all_bots)} 个 Bot：{[b['name'] for b in self._all_bots]}")
             else:
-                logger.info(f"自动识别：协调者是 '{self._coordinator_name}'，当前 Bot '{self.bot_name}' 是 Worker")
+                logger.info(f"自动识别：Coordinator是 '{self._coordinator_name}'，当前 Bot '{self.bot_name}' 是 Worker")
         else:
-            logger.warning("配置加载器不可用，协调者识别已跳过")
+            logger.warning("Config loader not available，Coordinator识别已跳过")
         # =========================================
 
         # Initialize channel manager (仅在未注入 MessageChannel 时使用)
@@ -234,40 +234,40 @@ class PhoenixCoreGateway:
 
         # Orchestrator (v5.0) - only for controller bot (小小谦)
         self._orchestrator: Optional[Orchestrator] = None
-        # 使用协调者自动识别结果（新增）
+        # 使用Coordinator自动识别结果（新增）
         self._is_controller = self._is_coordinator
         if self._is_controller and ORCHESTRATOR_AVAILABLE:
             self._init_orchestrator()
 
         # ========== 自动化集成核心：大脑创建和注入 ==========
-        # 只有协调者 Bot 才需要内置大脑（大脑与协调员一体）
+        # 只有Coordinator Bot 才需要内置大脑（大脑与协调员一体）
         self.brain = None
         if self._is_controller:
             from phoenix_core.core_brain import get_brain
             self.brain = get_brain()
-            # 将 Gateway 自身注入大脑，这样大脑可以直接调用 Gateway 发送 Discord 消息
+            # 将 Gateway 自身注入大脑，这样大脑可以直接调用 Gateway 发送 Discord Message
             self.brain._gateway = self
-            logger.info(f"协调者 Bot 已初始化大脑，Gateway 已注入")
+            logger.info(f"Coordinator Bot 已初始化大脑，Gateway 已注入")
         # ===================================================
 
         # Discord mention mapping (Chinese name -> Discord ID)
         self._discord_mentions = {
             "@小小谦": "1483335704590155786",
-            "@场控": "1479053473038467212",
-            "@运营": "1479047738371870730",
-            "@渠道": "1483334000109162586",
-            "@美工": "1479055713220431995",
-            "@编导": "1479060596648312942",
-            "@剪辑": "1479054512114368512",
-            "@客服": "1479061563737641095",
+            "@StageControl": "1479053473038467212",
+            "@Operations": "1479047738371870730",
+            "@Channel": "1483334000109162586",
+            "@Designer": "1479055713220431995",
+            "@Director": "1479060596648312942",
+            "@Editor": "1479054512114368512",
+            "@Support": "1479061563737641095",
         }
 
-        # P1 Features (审计日志、链路追踪、进度汇报)
+        # P1 Features (AuditLog、链路Trace、Progress汇报)
         if P1_FEATURES_AVAILABLE:
             self.audit_logger = get_audit_logger()
             self.tracer = get_tracer()
             self.progress_reporter = get_progress_reporter()
-            logger.info("P1 功能模块已加载 (审计日志、链路追踪、进度汇报)")
+            logger.info("P1 功能模块已加载 (AuditLog、链路Trace、Progress汇报)")
         else:
             self.audit_logger = None
             self.tracer = None
@@ -279,36 +279,36 @@ class PhoenixCoreGateway:
         self.concurrency_manager = GatewayConcurrencyManager(max_retries=0, default_timeout=60.0)
         logger.info("并发管理器已加载")
 
-        # ========== 技能执行器（新增） ==========
-        # 加载 SkillExecutor 用于执行可执行技能
+        # ========== Skill执行器（新增） ==========
+        # 加载 SkillExecutor 用于执行可执行Skill
         try:
             from phoenix_core.skill_executor import get_executor
             self.skill_executor = get_executor()
-            logger.info(f"技能执行器已加载 ({len(self.skill_executor.get_all_skills())} 个技能)")
+            logger.info(f"Skill执行器已加载 ({len(self.skill_executor.get_all_skills())} 个Skill)")
         except ImportError as e:
             self.skill_executor = None
-            logger.warning(f"技能执行器不可用：{e}")
+            logger.warning(f"Skill执行器不可用：{e}")
         # =======================================
 
-        # ========== 团队委托器（新增 Phase 2） ==========
-        # 加载 TeamDelegator 用于团队任务委托
+        # ========== TeamDelegation器（新增 Phase 2） ==========
+        # 加载 TeamDelegator 用于TeamTaskDelegation
         try:
             from phoenix_core.team_delegator import get_team_delegator, register_team_as_skill
             self.team_delegator = get_team_delegator(gateway=self, config_loader=None)
-            logger.info(f"团队委托器已加载 ({len(self.team_delegator.teams)} 个团队)")
+            logger.info(f"TeamDelegation器已加载 ({len(self.team_delegator.teams)} 个Team)")
 
-            # 自动将团队注册为协调者 Bot 的技能
-            if self.bot_name in ["小小谦", "协调者"]:
+            # 自动将Team注册为Coordinator Bot 的Skill
+            if self.bot_name in ["小小谦", "Coordinator"]:
                 for team_name in self.team_delegator.teams.keys():
                     register_team_as_skill(
                         team_name=team_name,
                         coordinator_bot=self.bot_name,
                         gateway=self
                     )
-                logger.info(f"已将团队注册为 {self.bot_name} 的技能")
+                logger.info(f"已将Team注册为 {self.bot_name} 的Skill")
         except ImportError as e:
             self.team_delegator = None
-            logger.warning(f"团队委托器不可用：{e}")
+            logger.warning(f"TeamDelegation器不可用：{e}")
         # ===============================================
 
         # Heartbeat task
@@ -323,10 +323,10 @@ class PhoenixCoreGateway:
         context: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """
-        便捷方法：委托团队任务
+        便捷方法：DelegationTeamTask
 
         Usage in CoreBrain:
-            result = await gateway.delegate_to_team("内容团队", "策划直播活动")
+            result = await gateway.delegate_to_team("内容Team", "策划直播活动")
         """
         if not self.team_delegator:
             return {
@@ -341,39 +341,39 @@ class PhoenixCoreGateway:
         )
 
     def get_team_list(self) -> List[Dict]:
-        """获取团队列表（用于 API 展示）"""
+        """获取Team列表（用于 API 展示）"""
         if not self.team_delegator:
             return []
         return self.team_delegator.get_all_teams()
     # =======================================================
 
-    # ========== Phase 3: Remote Debug 远程调试 ==========
+    # ========== Phase 3: Remote Debug RemoteDebug ==========
     async def start_remote_debug(self) -> bool:
-        """启动远程调试客户端"""
+        """StartingRemoteDebug客户端"""
         if not REMOTE_DEBUG_AVAILABLE:
-            logger.warning("远程调试模块不可用")
+            logger.warning("RemoteDebug模块不可用")
             return False
 
         server_url = os.environ.get("DEBUG_MASTER_URL")
         device_id = os.environ.get("DEBUG_DEVICE_ID")
 
         if not server_url:
-            logger.info("📡 远程调试未启用 (缺少 DEBUG_MASTER_URL)")
+            logger.info("📡 RemoteDebug未启用 (缺少 DEBUG_MASTER_URL)")
             return False
 
-        logger.info(f"📡 启动远程调试客户端...")
-        logger.info(f"   服务器：{server_url}")
-        logger.info(f"   设备 ID: {device_id or '自动生成'}")
+        logger.info(f"📡 StartingRemoteDebug客户端...")
+        logger.info(f"   Server：{server_url}")
+        logger.info(f"   Device ID: {device_id or '自动生成'}")
 
         task = await start_remote_debug()
         if task:
-            logger.info("✅ 远程调试客户端已启动")
-            send_log("INFO", f"Gateway 启动 - Bot: {self.bot_name}")
+            logger.info("✅ RemoteDebug客户端已Starting")
+            send_log("INFO", f"Gateway Starting - Bot: {self.bot_name}")
             return True
         return False
 
     def send_debug_log(self, level: str, message: str):
-        """发送调试日志到服务器"""
+        """发送DebugLog到Server"""
         if REMOTE_DEBUG_AVAILABLE:
             send_log(level, message)
     # =======================================================
@@ -430,7 +430,7 @@ class PhoenixCoreGateway:
         Layer 2: Send protocol request and wait for response with timeout.
 
         Args:
-            target_bot_id: Bot name (e.g., "场控")
+            target_bot_id: Bot name (e.g., "StageControl")
             target_bot_discord_id: Discord ID (e.g., "1479053473038467212")
             content: Request content
             timeout: Timeout in seconds
@@ -454,20 +454,20 @@ class PhoenixCoreGateway:
         channel = self.channel_manager.get_channel("discord")
         if not channel or not channel.connected:
             logger.error("Discord channel not available")
-            return "错误：Discord 频道不可用"
+            return "Error：Discord 频道不可用"
 
         # Get Discord channel ID from environment
         discord_channel_id = os.environ.get("DISCORD_CHANNEL_ID")
         if not discord_channel_id:
             logger.error("DISCORD_CHANNEL_ID not set")
-            return "错误：频道配置缺失"
+            return "Error：频道配置缺失"
 
         try:
             await channel.send_message(to=discord_channel_id, content=protocol_msg)
             logger.info(f"Sent protocol request {request_id} to {target_bot_id}: {content[:50]}")
         except Exception as e:
             logger.error(f"Failed to send protocol request: {e}")
-            return f"错误：发送失败 - {e}"
+            return f"Error：发送Failed - {e}"
 
         # Wait for response with timeout
         try:
@@ -561,7 +561,7 @@ class PhoenixCoreGateway:
         优先级：
         1. 从 config_loader 加载 Bot 配置（中央配置）
         2. 从 workspace/gateway.yaml 加载
-        3. 使用默认配置
+        3. Using default config
         """
         # 优先级 1: 从 config_loader 加载 Bot 配置
         if self.bot_config:
@@ -635,7 +635,7 @@ class PhoenixCoreGateway:
                 """Send protocol message to Worker Bot via Discord.
 
                 Args:
-                    bot_id: Bot name (e.g., "场控", "运营")
+                    bot_id: Bot name (e.g., "StageControl", "Operations")
                     protocol: Protocol format message (may or may not have <@BOT_ID> prefix)
                 """
                 try:
@@ -791,20 +791,20 @@ class PhoenixCoreGateway:
         if self._bot_identity:
             logger.info(f"Loaded IDENTITY.md ({len(self._bot_identity)} chars)")
 
-        # ========== 自动导入技能到 SkillRegistry（新增） ==========
-        # 启动时将 SOUL.md 内容注册为技能，这样讨论机制可以动态匹配
+        # ========== 自动导入Skill到 SkillRegistry（新增） ==========
+        # Starting时将 SOUL.md 内容注册为Skill，这样讨论机制可以动态匹配
         if self._bot_soul and self.brain:
             try:
                 from phoenix_core.skill_registry import import_from_soul_md
                 soul_path = self.workspace / "SOUL.md"
                 import_from_soul_md(self.brain.skill_registry, self.bot_name, soul_path)
-                logger.info(f"已导入 SOUL.md 技能：{self.bot_name}")
+                logger.info(f"已导入 SOUL.md Skill：{self.bot_name}")
             except Exception as e:
-                logger.warning(f"导入 SOUL.md 技能失败：{e}")
+                logger.warning(f"导入 SOUL.md SkillFailed：{e}")
         # =======================================================
 
         # Read daily tasks
-        task_file = self.shared_memory_dir / "今日任务.md"
+        task_file = self.shared_memory_dir / "今日Task.md"
         if task_file.exists():
             content = task_file.read_text(encoding="utf-8")
             logger.info(f"Loaded daily tasks ({len(content)} chars)")
@@ -830,13 +830,13 @@ class PhoenixCoreGateway:
 
         logger.info("Startup routine completed")
 
-        # ========== Phase 3: 启动远程调试 ==========
+        # ========== Phase 3: StartingRemoteDebug ==========
         if REMOTE_DEBUG_AVAILABLE:
             asyncio.create_task(self.start_remote_debug())
         # =========================================
 
-        # Layer 5: 静默启动 - 不再发送上线广播到 Discord 频道
-        # 上线状态仅通过心跳文件报告给 Dashboard
+        # Layer 5: 静默Starting - 不再发送上线广播到 Discord 频道
+        # 上线状态仅通过Heartbeat文件报告给 Dashboard
         logger.info(f"{self.bot_name} started silently (no Discord broadcast)")
 
     def _get_main_channel_id(self, channel_id: str) -> str:
@@ -850,15 +850,15 @@ class PhoenixCoreGateway:
 
     def _is_collaboration_request(self, user_message: str) -> bool:
         """
-        判断用户请求是否需要多 Bot 协作
+        判断User请求是否需要多 Bot 协作
 
         判断依据：
         1. 包含多个 Bot 的@mention
         2. 包含协作相关关键词（讨论、方案、策划、组织、安排等）
-        3. 是复杂任务（涉及多个领域）
+        3. 是复杂Task（涉及多个领域）
 
         Args:
-            user_message: 用户消息内容
+            user_message: UserMessage内容
 
         Returns:
             是否需要多 Bot 协作
@@ -873,7 +873,7 @@ class PhoenixCoreGateway:
         # 2. 检查协作关键词
         collaboration_keywords = [
             "讨论", "方案", "策划", "组织", "安排", "协调",
-            "一起", "协作", "配合", "团队", "大家", "所有",
+            "一起", "协作", "配合", "Team", "大家", "所有",
             "整体", "全面", "计划", "规划", "筹备"
         ]
         for keyword in collaboration_keywords:
@@ -881,44 +881,44 @@ class PhoenixCoreGateway:
                 logger.info(f"检测到协作关键词：'{keyword}'")
                 return True
 
-        # 3. 检查是否@了协调者 + 复杂任务
+        # 3. 检查是否@了Coordinator + 复杂Task
         if self._is_coordinator:
-            # 如果消息是发给协调者的，且包含复杂任务特征
-            complex_keywords = ["直播", "活动", "项目", "任务", "工作"]
+            # 如果Message是发给Coordinator的，且包含复杂Task特征
+            complex_keywords = ["直播", "活动", "项目", "Task", "工作"]
             for kw in complex_keywords:
                 if kw in user_message:
-                    logger.info(f"协调者收到复杂任务：'{kw}'")
+                    logger.info(f"Coordinator收到复杂Task：'{kw}'")
                     return True
 
         return False
 
     async def _try_execute_skill(self, user_message: str) -> Optional[str]:
         """
-        尝试执行技能
+        尝试执行Skill
 
         流程：
-        1. 使用 LLM 判断用户输入是否匹配已注册技能
+        1. 使用 LLM 判断User输入是否匹配已注册Skill
         2. 如果匹配，调用 SkillExecutor 执行
         3. 返回执行结果
 
         Args:
-            user_message: 用户消息
+            user_message: UserMessage
 
         Returns:
-            技能执行结果（如果匹配），否则 None
+            Skill执行结果（如果匹配），否则 None
         """
         if not self.skill_executor:
             return None
 
-        # Step 1: 检查是否匹配技能触发词
+        # Step 1: 检查是否匹配Skill触发词
         matched_skill = self.skill_executor.find_skill_by_trigger(user_message)
 
         if not matched_skill:
             return None
 
-        logger.info(f"匹配到技能：{matched_skill}")
+        logger.info(f"匹配到Skill：{matched_skill}")
 
-        # Step 2: 执行技能
+        # Step 2: 执行Skill
         try:
             result = await self.skill_executor.execute(matched_skill, {
                 "user_input": user_message,
@@ -926,14 +926,14 @@ class PhoenixCoreGateway:
             })
 
             if result.get("success"):
-                logger.info(f"技能执行成功：{matched_skill}")
+                logger.info(f"Skill执行成功：{matched_skill}")
                 return result.get("suggested_action", str(result))
             else:
-                logger.warning(f"技能执行失败：{matched_skill} - {result.get('error')}")
+                logger.warning(f"Skill执行Failed：{matched_skill} - {result.get('error')}")
                 return None
 
         except Exception as e:
-            logger.error(f"技能执行异常：{e}")
+            logger.error(f"Skill执行异常：{e}")
             return None
 
     async def _handle_message_from_channel(self, message: Message, channel: ChannelPlugin) -> Optional[str]:
@@ -996,13 +996,13 @@ class PhoenixCoreGateway:
 
     async def _process_message(self, message: Message, channel: ChannelPlugin) -> Optional[str]:
         """
-        Process a message through the Gateway (集成 P1 功能：审计日志、链路追踪、进度汇报).
+        Process a message through the Gateway (集成 P1 功能：AuditLog、链路Trace、Progress汇报).
 
         This is the core business logic that was previously in discord_bot.py
         """
         logger.info(f"Received message from {message.username}: {message.content[:50]}...")
 
-        # P1: 开始链路追踪
+        # P1: 开始链路Trace
         trace_id = None
         if self.tracer:
             trace_id = self.tracer.start_trace(
@@ -1010,7 +1010,7 @@ class PhoenixCoreGateway:
                 request_id=f"{message.id}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
             )
 
-        # P1: 记录审计日志
+        # P1: 记录AuditLog
         if self.audit_logger:
             self.audit_logger.log_message(
                 content=message.content,
@@ -1027,39 +1027,39 @@ class PhoenixCoreGateway:
                 # Discord mentions are handled at channel level
                 pass
 
-            # P1: 创建进度追踪 (如果是任务请求)
+            # P1: 创建ProgressTrace (如果是Task请求)
             progress = None
             if self.progress_reporter and self._is_task_request(message.content):
                 progress = self.progress_reporter.create_progress(
                     task_id=trace_id or message.id,
                     user_id=message.username,
                     description=message.content[:100],
-                    subtasks=["sub-0", "sub-1"]  # 默认 2 个子任务
+                    subtasks=["sub-0", "sub-1"]  # 默认 2 个子Task
                 )
 
-            # Layer 3: Worker Bot 响应协议格式消息 或 直接@它的消息
+            # Layer 3: Worker Bot 响应协议格式Message 或 直接@它的Message
             if not self._is_controller:
                 import re
-                # 注意：RESPONSE 消息不需要 Worker Bot 处理，只给控制器 Bot 匹配 pending future
+                # 注意：RESPONSE Message不需要 Worker Bot 处理，只给控制器 Bot 匹配 pending future
                 protocol_match = re.search(r'\[(ASK|DO|REQUEST)\|', user_message)
                 # 检查是否有@mention（使用 bot_name 匹配）
                 has_mention = self.bot_name in user_message or f"<@{self._discord_mentions.get('@' + self.bot_name, '')}>" in user_message
 
-                # 检查是否是 RESPONSE 消息 - Worker Bot 应该忽略
+                # 检查是否是 RESPONSE Message - Worker Bot 应该忽略
                 is_response = re.search(r'\[RESPONSE\|', user_message)
                 if is_response:
                     logger.info(f"Ignoring RESPONSE message (Worker Bot skip): {user_message[:50]}")
                     return None
 
-                # 检查协议消息是否是发给自己的（检查<@BOT_ID>）
+                # 检查协议Message是否是发给自己的（检查<@BOT_ID>）
                 is_targeted = True
                 if protocol_match:
-                    # 提取消息中的@目标 ID
+                    # 提取Message中的@目标 ID
                     mention_match = re.match(r'<@(\d+)>', user_message.strip())
                     if mention_match:
                         target_bot_id = mention_match.group(1)
                         my_bot_id = self._discord_mentions.get(f"@{self.bot_name}", "")
-                        # 如果@的目标不是自己，忽略消息
+                        # 如果@的目标不是自己，忽略Message
                         if target_bot_id and my_bot_id and target_bot_id != my_bot_id:
                             is_targeted = False
                             logger.info(f"Ignoring ASK message for another bot (target={target_bot_id}, myself={my_bot_id}): {user_message[:50]}")
@@ -1073,12 +1073,12 @@ class PhoenixCoreGateway:
 
                 logger.info(f"Processing message (protocol={protocol_match}, mention={has_mention}, targeted={is_targeted}): {user_message[:50]}")
 
-            # Layer 4: 小小谦跳过 Worker Bot 的自然语言回复（防止消息循环）
-            # 当场控等 Worker Bot 回复@mention 时，回复是自然语言格式，不应该再次触发 ASK
+            # Layer 4: 小小谦跳过 Worker Bot 的自然语言回复（防止Message循环）
+            # 当StageControl等 Worker Bot 回复@mention 时，回复是自然语言格式，不应该再次触发 ASK
             if self._is_controller:
                 import re
-                worker_bot_names = {"场控", "运营", "渠道", "美工", "编导", "剪辑", "客服"}
-                # 检查消息是否来自 Worker Bot（通过用户名判断，检查是否包含 Bot 名称）
+                worker_bot_names = {"StageControl", "Operations", "Channel", "Designer", "Director", "Editor", "Support"}
+                # 检查Message是否来自 Worker Bot（通过User名判断，检查是否包含 Bot 名称）
                 is_worker_bot = any(name in (message.username or '') for name in worker_bot_names)
                 # 检查是否包含协议格式（如果有协议格式，说明是 Bot 之间的通信，需要处理）
                 has_protocol = re.search(r'\[(ASK|DO|REQUEST|RESPONSE)\|', user_message)
@@ -1090,14 +1090,14 @@ class PhoenixCoreGateway:
             if not user_message:
                 return None
 
-            # ========== 技能执行检查（新增） ==========
-            # 在 LLM 处理之前，先尝试匹配并执行已注册的技能
+            # ========== Skill执行检查（新增） ==========
+            # 在 LLM 处理之前，先尝试匹配并执行已注册的Skill
             if self.skill_executor and not self._is_controller:
-                # Worker Bot 优先检查技能匹配
+                # Worker Bot 优先检查Skill匹配
                 skill_result = await self._try_execute_skill(user_message)
                 if skill_result:
-                    # 技能匹配成功，直接返回结果
-                    logger.info(f"技能执行完成，跳过 LLM 处理")
+                    # Skill匹配成功，直接返回结果
+                    logger.info(f"Skill执行Completed，跳过 LLM 处理")
 
                     # 包装协议响应
                     import re
@@ -1109,7 +1109,7 @@ class PhoenixCoreGateway:
                     else:
                         response = skill_result
 
-                    # 停止 typing
+                    # Stopping typing
                     typing_task.cancel()
 
                     # 发送响应
@@ -1130,7 +1130,7 @@ class PhoenixCoreGateway:
                 self._continuous_typing(channel, message.channel_id)
             )
 
-            # P1: 更新进度 (开始处理)
+            # P1: 更新Progress (开始处理)
             if progress and self.progress_reporter:
                 self.progress_reporter.update_progress(
                     task_id=trace_id or message.id,
@@ -1140,13 +1140,13 @@ class PhoenixCoreGateway:
                     description="正在处理..."
                 )
 
-            # v5.0: 小小谦使用 Orchestrator 处理用户消息
+            # v5.0: 小小谦使用 Orchestrator 处理UserMessage
             if self._is_controller and self._orchestrator:
                 # 小小谦：使用编排器处理（意图识别→协议生成→路由分发→结果汇总）
                 response = await self._process_with_orchestrator(user_message, message, channel)
             else:
                 # Worker Bot：直接使用 LLM 处理
-                # 提取协议信息用于包装响应
+                # 提取协议Info用于包装响应
                 import re
                 # Protocol v1.1 format: [ASK|VERSION|REQUEST_ID|SUB_TASK_ID|SENDER|FLAGS]
                 protocol_match = re.search(r'\[(ASK|DO|REQUEST)\|([^\|]+)\|([^\|]+)\|([^\|]+)\|([^\|]+)(?:\|([^\]]*))?\]', user_message)
@@ -1162,7 +1162,7 @@ class PhoenixCoreGateway:
                     llm_response = re.sub(r'<@\d+>\s*', '', llm_response).strip()
                     logger.info(f"Cleaned LLM response: {llm_response[:50]}...")
                     # 强制包装协议头：[RESPONSE|VERSION|REQUEST_ID|SUB_TASK_ID|SENDER|FINAL]
-                    # 回复给当前 Bot 自己（因为消息是发给自己的）
+                    # 回复给当前 Bot 自己（因为Message是发给自己的）
                     sender_discord_id = self._discord_mentions.get(f"@{self.bot_name}", "")
                     # 降级逻辑：如果映射不存在，使用空 ID
                     if not sender_discord_id:
@@ -1173,7 +1173,7 @@ class PhoenixCoreGateway:
                 else:
                     response = await self._call_llm(user_message, message, channel)
 
-            # 停止 typing
+            # Stopping typing
             typing_task.cancel()
 
             if response:
@@ -1186,15 +1186,15 @@ class PhoenixCoreGateway:
                     auto_delete=False
                 )
 
-            # P1: 更新进度 (完成)
+            # P1: 更新Progress (Completed)
             if progress and self.progress_reporter:
                 self.progress_reporter.update_progress(
                     task_id=trace_id or message.id,
                     status="completed",
-                    description="处理完成"
+                    description="处理Completed"
                 )
 
-            # P1: 记录完成审计日志
+            # P1: 记录CompletedAuditLog
             if self.audit_logger:
                 self.audit_logger.log_operation(
                     operation="message_processed",
@@ -1203,7 +1203,7 @@ class PhoenixCoreGateway:
                     details=f"response_length={len(response) if response else 0}"
                 )
 
-            # P1: 结束链路追踪
+            # P1: 结束链路Trace
             if self.tracer and trace_id:
                 with self.tracer.trace_operation(trace_id, "response_sent") as span:
                     span.add_log("response_sent", length=len(response) if response else 0)
@@ -1213,7 +1213,7 @@ class PhoenixCoreGateway:
         except Exception as e:
             logger.error(f"Error processing message: {e}", exc_info=True)
 
-            # P1: 记录错误审计日志
+            # P1: 记录ErrorAuditLog
             if self.audit_logger:
                 self.audit_logger.log_error(
                     error=str(e),
@@ -1222,15 +1222,15 @@ class PhoenixCoreGateway:
                     traceback=str(e)
                 )
 
-            # P1: 更新进度 (失败)
+            # P1: 更新Progress (Failed)
             if self.progress_reporter and trace_id:
                 self.progress_reporter.update_progress(
                     task_id=trace_id,
                     status="failed",
-                    description=f"处理失败：{e}"
+                    description=f"处理Failed：{e}"
                 )
 
-            # P1: 结束链路追踪 (错误)
+            # P1: 结束链路Trace (Error)
             if self.tracer and trace_id:
                 with self.tracer.trace_operation(trace_id, "error") as span:
                     span.add_log("error", message=str(e))
@@ -1238,8 +1238,8 @@ class PhoenixCoreGateway:
             return None
 
     def _is_task_request(self, content: str) -> bool:
-        """判断是否是任务请求 (需要进度追踪)"""
-        task_keywords = ["订单", "退款", "查询", "处理", "任务", "帮我", "check", "order", "refund"]
+        """判断是否是Task请求 (需要ProgressTrace)"""
+        task_keywords = ["订单", "退款", "查询", "处理", "Task", "帮我", "check", "order", "refund"]
         return any(kw in content for kw in task_keywords)
 
     async def _continuous_typing(self, channel: ChannelPlugin, channel_id: str):
@@ -1282,7 +1282,7 @@ class PhoenixCoreGateway:
             import re
             protocol_match = re.search(r'\[(ASK|DO|REQUEST)\|([^|]+)\|([^\]]+)\]', user_message)
             if protocol_match:
-                # 收到协议格式消息，LLM 只需生成自然语言回复
+                # 收到协议格式Message，LLM 只需生成自然语言回复
                 msg_type, request_id, sender = protocol_match.groups()
                 logger.info(f"[{bot_name}] Protocol message: type={msg_type}, request_id={request_id}, sender={sender}")
 
@@ -1297,7 +1297,7 @@ class PhoenixCoreGateway:
 - 模型：{model} ({provider})
 - 人格设定：以上是你的身份和人格设定，请根据设定进行自然对话。
 
-请根据以上人格设定、身份信息和共享上下文进行自然对话。要求回复简洁、快速。{protocol_instruction}
+请根据以上人格设定、身份Info和共享上下文进行自然对话。要求回复简洁、快速。{protocol_instruction}
 """
 
             # Call LLM API (run in thread to avoid blocking event loop)
@@ -1331,7 +1331,7 @@ class PhoenixCoreGateway:
                     )
                     logger.info(f"[{bot_name}] Memory saved successfully")
                 except Exception as e:
-                    logger.error(f"[{bot_name}] 保存对话失败：{e}", exc_info=True)
+                    logger.error(f"[{bot_name}] 保存对话Failed：{e}", exc_info=True)
 
             return response
 
@@ -1412,7 +1412,7 @@ class PhoenixCoreGateway:
                 return True
 
         # Strong planning keywords (trigger alone)
-        strong_planning_keywords = ["直播方案", "直播策划", "活动方案", "活动策划", "多 Bot", "团队协作"]
+        strong_planning_keywords = ["直播方案", "直播策划", "活动方案", "活动策划", "多 Bot", "Team协作"]
         for kw in strong_planning_keywords:
             if kw in content:
                 return True
@@ -1448,11 +1448,11 @@ class PhoenixCoreGateway:
         try:
             # 使用内置的大脑实例（在__init__中已创建并注入）
             if not self.brain:
-                logger.error("大脑未初始化，只有协调者 Bot 才有大脑")
-                return f"错误：大脑未初始化"
+                logger.error("大脑未初始化，只有Coordinator Bot 才有大脑")
+                return f"Error：大脑未初始化"
 
             # 大脑已经注入 Gateway，无需重复设置
-            # self.brain._gateway = self  (已在__init__中完成)
+            # self.brain._gateway = self  (已在__init__中Completed)
 
             # Call CoreBrain's collaboration method
             response = await self.brain.process_collaboration_request(
@@ -1463,7 +1463,7 @@ class PhoenixCoreGateway:
             if response.success:
                 return response.message
             else:
-                return f"任务分发失败：{response.message}"
+                return f"Task分发Failed：{response.message}"
 
         except Exception as e:
             logger.error(f"Brain forwarding error: {e}", exc_info=True)
@@ -1525,7 +1525,7 @@ class PhoenixCoreGateway:
         Send message to a specific Bot and wait for response via Discord.
 
         Args:
-            bot_id: Target Bot name (e.g., "运营", "编导")
+            bot_id: Target Bot name (e.g., "Operations", "Director")
             message: Message content
             protocol_msg: Optional protocol format message
             request_id: Request ID for tracking
@@ -1534,7 +1534,7 @@ class PhoenixCoreGateway:
             Bot's response
         """
         import datetime
-        # 构建协议消息 (Protocol v1.1): [ASK|VERSION|REQUEST_ID|SUB_TASK_ID|SENDER|FLAGS]
+        # 构建协议Message (Protocol v1.1): [ASK|VERSION|REQUEST_ID|SUB_TASK_ID|SENDER|FLAGS]
         if not protocol_msg:
             request_id = request_id or f"TASK-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
             sub_task_id = "main"
@@ -1546,25 +1546,25 @@ class PhoenixCoreGateway:
             logger.warning(f"Bot {bot_id} Discord ID not found in mentions, using empty ID")
             bot_discord_id = ""
 
-        # 包装成完整的 Discord 消息
+        # 包装成完整的 Discord Message
         full_message = f"<@{bot_discord_id}> {protocol_msg}"
 
         # 发送到 Discord 频道
         channel = self.channel_manager.get_channel("discord")
         if not channel or not channel.connected:
             logger.error("Discord channel not available")
-            return f"错误：Discord 频道不可用"
+            return f"Error：Discord 频道不可用"
 
         discord_channel_id = os.environ.get("DISCORD_CHANNEL_ID")
         if not discord_channel_id:
             logger.error("DISCORD_CHANNEL_ID not set")
-            return f"错误：频道配置缺失"
+            return f"Error：频道配置缺失"
 
         # 注册 Future 等待回复
         cm = self.concurrency_manager if hasattr(self, 'concurrency_manager') else None
 
         if cm:
-            # 使用并发管理器注册子任务
+            # 使用并发管理器注册子Task
             sub_task_id = "main"
             future = cm.register_subtask(
                 user_id="core_brain",
@@ -1573,13 +1573,13 @@ class PhoenixCoreGateway:
             )
             logger.info(f"Registered pending task: request_id={request_id}, sub_task_id={sub_task_id} -> {bot_id}")
 
-        # 发送消息到 Discord
+        # 发送Message到 Discord
         send_success = await channel.send_message(to=discord_channel_id, content=full_message, auto_delete=False)
         if send_success:
             logger.info(f"[DISCORD] Sent to {bot_id}: {full_message[:80]}...")
         else:
             logger.error(f"[DISCORD] Failed to send message to {bot_id}: {full_message[:80]}")
-            return f"错误：消息发送失败"
+            return f"Error：Message发送Failed"
 
         # 等待回复
         if cm and future:
@@ -1595,9 +1595,9 @@ class PhoenixCoreGateway:
                 # 清理 Future
                 cm.pending.get("core_brain", {}).pop(request_id, None)
 
-        # 没有并发管理器，返回错误
+        # 没有并发管理器，返回Error
         logger.error("Concurrency manager not available")
-        return f"错误：并发管理器不可用"
+        return f"Error：并发管理器不可用"
 
     def _is_protocol_message(self, content: str) -> bool:
         """
@@ -1623,16 +1623,16 @@ class PhoenixCoreGateway:
         parser = ProtocolParser()
         return parser.parse(content) is not None
 
-    # ==================== 平台无关消息处理 ====================
+    # ==================== 平台无关Message处理 ====================
 
     async def _register_platform_message_callback(self):
-        """注册平台消息回调（平台无关模式）"""
+        """注册平台Message回调（平台无关模式）"""
         if not self._platform_channel:
             return
 
         async def handle_platform_message(msg: "PlatformMessage"):
-            """处理平台消息"""
-            # 1. 消息去重
+            """处理平台Message"""
+            # 1. Message去重
             msg_hash = f"{msg.platform}:{msg.channel_id}:{msg.author_id}:{msg.content}:{msg.timestamp}"
             if self._is_duplicate_message(msg_hash):
                 logger.debug(f"Duplicate message ignored: {msg_hash[:50]}")
@@ -1640,7 +1640,7 @@ class PhoenixCoreGateway:
 
             # 2. 检查是否@了 Bot（控制器 Bot 需要@才响应）
             if self._is_controller and not msg.is_mention:
-                # 检查是否是协议消息（Bot 之间的协作）
+                # 检查是否是协议Message（Bot 之间的协作）
                 from phoenix_core import ProtocolParser
                 parser = ProtocolParser()
                 parsed = parser.parse(msg.content)
@@ -1662,10 +1662,10 @@ class PhoenixCoreGateway:
                     )
 
         await self._platform_channel.on_message(handle_platform_message)
-        logger.info(f"平台消息回调已注册：{self._platform_channel.platform_name}")
+        logger.info(f"平台Message回调已注册：{self._platform_channel.platform_name}")
 
     def _is_duplicate_message(self, msg_hash: str) -> bool:
-        """检查是否是重复消息"""
+        """检查是否是重复Message"""
         import time
         now = time.time()
 
@@ -1692,8 +1692,8 @@ class PhoenixCoreGateway:
         平台无关的发送接口（大脑调用）
 
         Args:
-            target: 目标频道/用户 ID
-            content: 消息内容
+            target: 目标频道/User ID
+            content: Message内容
 
         Returns:
             bool: 是否发送成功
@@ -1758,7 +1758,7 @@ class PhoenixCoreGateway:
             content = shared_memory.read_text()
             if len(content) > 3000:
                 content = content[:3000] + "\n\n[...共享记忆已截断...]"
-            shared_parts.append(f"## 团队共享记忆\n{content}")
+            shared_parts.append(f"## Team共享记忆\n{content}")
 
         # Load 主播资料 (streamer profile) - PRIORITY #1
         streamer_profile = self.shared_memory_dir / "主播资料.md"
@@ -1774,8 +1774,8 @@ class PhoenixCoreGateway:
         if today_log.exists():
             content = today_log.read_text()
             if len(content) > 3000:
-                content = content[:3000] + "\n\n[...今日日志已截断...]"
-            shared_parts.append(f"## 今日共享日志 ({today})\n{content}")
+                content = content[:3000] + "\n\n[...今日Log已截断...]"
+            shared_parts.append(f"## 今日共享Log ({today})\n{content}")
 
         return "\n\n".join(shared_parts) if shared_parts else ""
 
@@ -1899,7 +1899,7 @@ async def main():
             from phoenix_core.feishu_channel import create_feishu_channel
             platform_channel = create_feishu_channel()
             if platform_channel:
-                logger.info(f"使用飞书平台适配器")
+                logger.info(f"使用Feishu平台适配器")
 
         if not platform_channel:
             logger.warning(f"平台 {platform} 配置不完整，使用默认 ChannelManager 模式")
@@ -1918,7 +1918,7 @@ async def main():
         stop_event.set()
 
     for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, signal_handler)
+        # loop.add_signal_handler(sig, signal_handler)  # Windows not supported
 
     # Initialize and start
     await gateway.initialize()
@@ -1929,7 +1929,7 @@ async def main():
         set_global_gateway(gateway)
         logger.info("协调员 Bot 已注册为全局 Gateway")
 
-        # Start embedded Dashboard API (协调者 Bot 才需要)
+        # Start embedded Dashboard API (Coordinator Bot 才需要)
         if not args.no_dashboard:
             await start_embedded_dashboard(gateway)
 
@@ -1963,9 +1963,9 @@ def get_gateway_instance() -> Optional["PhoenixCoreGateway"]:
 
 async def start_embedded_dashboard(gateway: "PhoenixCoreGateway"):
     """
-    启动内嵌的 Dashboard API 服务器
+    Starting内嵌的 Dashboard API Server
 
-    协调者 Bot 专用：将大脑和 Gateway 注入到 Dashboard API 中
+    Coordinator Bot 专用：将大脑和 Gateway 注入到 Dashboard API 中
     """
     import uvicorn
     from phoenix_core.api_server import create_app
@@ -1981,21 +1981,21 @@ async def start_embedded_dashboard(gateway: "PhoenixCoreGateway"):
     config = uvicorn.Config(app, host="0.0.0.0", port=8001, log_level="info")
     server = uvicorn.Server(config)
 
-    # 在后台任务中启动
+    # 在后台Task中Starting
     asyncio.create_task(server.serve())
 
-    # 等待服务器启动
+    # 等待ServerStarting
     await asyncio.sleep(2)
 
     logger.info("=" * 60)
-    logger.info("Dashboard API 已启动:")
+    logger.info("Dashboard API 已Starting:")
     logger.info("  URL: http://localhost:8001")
     logger.info("  端点:")
     logger.info("    GET  /           - 欢迎页")
     logger.info("    GET  /health     - 健康检查")
     logger.info("    POST /api/chat   - 与大脑对话")
     logger.info("    GET  /api/bots   - Bot 列表")
-    logger.info("    GET  /api/tasks  - 任务列表")
+    logger.info("    GET  /api/tasks  - Task列表")
     logger.info("=" * 60)
 
 
