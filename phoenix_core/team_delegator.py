@@ -402,7 +402,7 @@ def delegate_to_team(
     brief: str,
     policy: TeamDelegationPolicy = None,
     gateway=None
-) -> typing.Any:
+) -> Any:
     """便捷函数：委托团队任务"""
     delegator = get_team_delegator(gateway)
     return delegator.delegate_to_team(team_name, brief, policy)
