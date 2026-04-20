@@ -10,7 +10,7 @@ Phoenix Core Dashboard API Server
 5. WebSocket 实时推送
 
 Usage:
-    # 独立运行模式（用于调试，会自己创建大脑实例）
+    # Standalone运行模式（用于调试，会自己创建大脑实例）
     python3 api_server.py --port 8001
 
     # 嵌入式模式（由 Gateway 调用，复用 Gateway 的大脑）
@@ -82,7 +82,7 @@ def create_app(
         """获取大脑实例（优先使用传入的，否则自己创建）"""
         if app.state.brain:
             return app.state.brain
-        # 独立调试模式：自己创建大脑
+        # Standalone调试模式：自己创建大脑
         from phoenix_core.core_brain import get_brain
         return get_brain()
 
@@ -265,10 +265,10 @@ def create_app(
     return app
 
 
-# ============ 独立运行入口 ============
+# ============ Standalone运行入口 ============
 
 def main():
-    """独立运行模式（用于调试）"""
+    """Standalone运行模式（用于调试）"""
     import uvicorn
     import argparse
 
@@ -282,7 +282,7 @@ def main():
 ╔═══════════════════════════════════════════════════════════╗
 ║         Phoenix Core API Server                           ║
 ╠═══════════════════════════════════════════════════════════╣
-║  启动 API 服务器...                                        ║
+║  启动 API Server...                                        ║
 ║                                                            ║
 ║  API: http://{args.host}:{args.port}                           ║
 ║                                                            ║
@@ -296,7 +296,7 @@ def main():
 ╚═══════════════════════════════════════════════════════════╝
     """)
 
-    app = create_app()  # 独立模式，自己创建大脑实例
+    app = create_app()  # Standalone模式，自己创建大脑实例
     uvicorn.run(app, host=args.host, port=args.port)
 
 

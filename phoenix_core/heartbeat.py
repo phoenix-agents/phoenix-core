@@ -103,7 +103,7 @@ class HeartbeatSender:
         self._stop_event.clear()
         self._thread = threading.Thread(target=self._heartbeat_loop, daemon=True)
         self._thread.start()
-        print(f"[Heartbeat] {self.bot_name} 心跳已启动 (间隔={self.heartbeat_interval}s)")
+        print(f"[Heartbeat] {self.bot_name} 心跳Started (间隔={self.heartbeat_interval}s)")
 
     def stop(self):
         """停止心跳线程"""

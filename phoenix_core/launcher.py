@@ -3,7 +3,7 @@
 Phoenix Core Launcher - 自动 Bot 识别和启动器
 
 功能:
-1. 扫描 workspaces/目录，自动确定协调者 Bot
+1. 扫描 workspaces/目录，自动确定Coordinator Bot
 2. 为每个 Bot 加载配置和 SOUL.md
 3. 启动 Gateway 进程（包含大脑和 Dashboard API）
 
@@ -23,16 +23,16 @@ logger = logging.getLogger(__name__)
 
 def find_coordinator_bot(workspaces_dir: str = "workspaces") -> Optional[Dict]:
     """
-    扫描 workspaces/目录，按以下规则确定协调者：
+    扫描 workspaces/目录，按以下规则确定Coordinator：
     1. 优先查找 .env 中显式设置 IS_CONTROLLER=true 的 Bot
-    2. 如果没有，则选择按名称排序后的第一个 Bot 作为协调者
+    2. 如果没有，则选择按名称排序后的第一个 Bot 作为Coordinator
     3. 如果 workspaces/目录为空，返回 None
 
     Args:
         workspaces_dir: 工作区目录路径
 
     Returns:
-        协调者 Bot 信息 dict，包含 folder, bot_name, config 等
+        Coordinator Bot 信息 dict，包含 folder, bot_name, config 等
         如果没有找到，返回 None
     """
     workspaces_path = Path(workspaces_dir)
@@ -45,14 +45,14 @@ def find_coordinator_bot(workspaces_dir: str = "workspaces") -> Optional[Dict]:
         logger.warning(f"工作区目录为空：{workspaces_path}")
         return None
 
-    # 优先查找显式声明的协调者（IS_CONTROLLER=true）
+    # 优先查找显式声明的Coordinator（IS_CONTROLLER=true）
     for folder in bot_folders:
         env_file = folder / ".env"
         if env_file.exists():
             env_content = env_file.read_text(encoding="utf-8")
             if "IS_CONTROLLER=true" in env_content:
                 config = _load_bot_config(folder)
-                logger.info(f"找到显式声明的协调者 Bot: {config.get('bot_name', folder.name)}")
+                logger.info(f"找到显式声明的Coordinator Bot: {config.get('bot_name', folder.name)}")
                 return {
                     "folder": folder.name,
                     "bot_name": config.get("bot_name", folder.name),
@@ -60,11 +60,11 @@ def find_coordinator_bot(workspaces_dir: str = "workspaces") -> Optional[Dict]:
                     "is_controller": True
                 }
 
-    # 没有显式声明，选择字母序第一个作为默认协调者
+    # 没有显式声明，选择字母序第一个作为默认Coordinator
     first_folder = sorted(bot_folders, key=lambda x: x.name)[0]
     config = _load_bot_config(first_folder)
 
-    logger.info(f"自动选择协调者 Bot: {config.get('bot_name', first_folder.name)}")
+    logger.info(f"自动选择Coordinator Bot: {config.get('bot_name', first_folder.name)}")
 
     return {
         "folder": first_folder.name,
@@ -178,7 +178,7 @@ def get_first_bot(workspaces_dir: str = "workspaces") -> Optional[Dict]:
 
 
 def is_controller_bot(bot_name: str, workspaces_dir: str = "workspaces") -> bool:
-    """判断指定 Bot 是否是协调者"""
+    """判断指定 Bot 是否是Coordinator"""
     bots = list_all_bots(workspaces_dir)
     for bot in bots:
         if bot["bot_name"] == bot_name:

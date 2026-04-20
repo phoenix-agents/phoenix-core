@@ -5,7 +5,7 @@ Phoenix Core - 核心工具库
 包含:
 - atomic_writer: 原子写入工具
 - config_schema: Pydantic 配置验证
-- heartbeat / heartbeat_v2 / heartbeat_cache: 心跳监控 (v2 独立文件，cache 内存缓存)
+- heartbeat / heartbeat_v2 / heartbeat_cache: 心跳监控 (v2 Standalone文件，cache 内存缓存)
 - api_validator: Flask/FastAPI 路由 Pydantic 校验装饰器
 - api_schemas: Pydantic 请求模型基类 (8 Bot 优化)
 - memory_db: SQLite 记忆存储加固 (WAL + 事务 + 备份)
@@ -198,7 +198,7 @@ __all__ = [
     "HeartbeatMonitor",
     "check_health",
     "send_heartbeat_once",
-    # Heartbeat (v2 - 独立文件模式，推荐)
+    # Heartbeat (v2 - Standalone文件模式，推荐)
     "write_heartbeat",
     "read_all_heartbeats",
     "get_bot_health",

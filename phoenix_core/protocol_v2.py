@@ -53,7 +53,7 @@ class HandoffPayload:
     conversation_context: List[str] = field(default_factory=list)     # 最近对话历史（压缩后）
     constraints: Dict[str, Any] = field(default_factory=dict)         # 约束条件 {"budget": 10000, "deadline": "2026-04-25"}
     expectations: str = ""           # 期望输出
-    return_channel: str = ""         # 结果返回给谁（协调者 ID）
+    return_channel: str = ""         # 结果返回给谁（Coordinator ID）
     deadline_seconds: Optional[int] = None  # 期望完成时间（秒）
 
     def to_json(self) -> str:

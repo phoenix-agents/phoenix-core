@@ -70,7 +70,7 @@ class HeartbeatCache:
         # 启动时从文件加载一次
         self._load_from_files()
 
-        logger.info(f"[HeartbeatCache] 已启动，TTL={CACHE_TTL}s")
+        logger.info(f"[HeartbeatCache] Started，TTL={CACHE_TTL}s")
 
     @classmethod
     def instance(cls) -> "HeartbeatCache":

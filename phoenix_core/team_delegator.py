@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phoenix Core - 团队委托管理器 (Team Delegation Manager) v1.3
+Phoenix Core - Team Delegation管理器 (Team Delegation Manager) v1.3
 
 功能:
 1. 将整个团队作为可调用的"技能"
@@ -10,7 +10,7 @@ Phoenix Core - 团队委托管理器 (Team Delegation Manager) v1.3
 
 架构:
 ┌─────────────────────────────────────────┐
-│    协调者 Bot 调用"运营团队"技能          │
+│    Coordinator Bot 调用"运营团队"技能          │
 │              ↓                           │
 │   TeamDelegator.delegate_to_team()       │
 │         │    │    │                      │
@@ -20,7 +20,7 @@ Phoenix Core - 团队委托管理器 (Team Delegation Manager) v1.3
 │    └────┘ └────┘ └────┘                 │
 │         │    │    │                      │
 │         ▼    ▼    ▼                      │
-│      汇总结果 → 返回协调者                 │
+│      汇总结果 → 返回Coordinator                 │
 └─────────────────────────────────────────┘
 
 Usage:
@@ -52,7 +52,7 @@ class TeamDelegationPolicy(Enum):
 
 @dataclass
 class TeamConfig:
-    """团队配置"""
+    """Team Config"""
     team_name: str
     bot_ids: List[str]           # 团队成员 Bot ID 列表
     description: str             # 团队描述
@@ -80,7 +80,7 @@ class TeamTask:
 
 class TeamDelegator:
     """
-    团队委托器
+    Team Delegation器
 
     负责将任务委托给整个团队，并根据策略汇总结果
     """
@@ -89,20 +89,20 @@ class TeamDelegator:
         """
         Args:
             gateway: PhoenixCoreGateway 实例
-            config_loader: 配置加载器，用于获取团队配置
+            config_loader: 配置加载器，用于获取Team Config
         """
         self.gateway = gateway
         self.config_loader = config_loader
         self.active_tasks: Dict[str, TeamTask] = {}
         self.teams: Dict[str, TeamConfig] = {}
 
-        # 加载团队配置
+        # 加载Team Config
         self._load_team_configs()
 
     def _load_team_configs(self):
         """从配置加载团队信息"""
         if not self.config_loader:
-            # 使用默认团队配置
+            # 使用默认Team Config
             self.teams = {
                 "内容团队": TeamConfig(
                     team_name="内容团队",
@@ -126,7 +126,7 @@ class TeamDelegator:
                     policy=TeamDelegationPolicy.ANY_COMPLETED
                 ),
             }
-            logger.info(f"加载默认团队配置：{list(self.teams.keys())}")
+            logger.info(f"加载默认Team Config：{list(self.teams.keys())}")
             return
 
         # 从配置文件加载
@@ -146,18 +146,18 @@ class TeamDelegator:
 
             logger.info(f"从配置加载团队：{list(self.teams.keys())}")
         except Exception as e:
-            logger.error(f"加载团队配置失败：{e}")
+            logger.error(f"加载Team Config失败：{e}")
             # 使用默认配置
             self._load_team_configs()
 
     def get_team_bots(self, team_name: str) -> List[str]:
-        """获取团队成员列表"""
+        """Get team member list"""
         if team_name in self.teams:
             return self.teams[team_name].bot_ids
         return []
 
     def get_all_teams(self) -> List[Dict]:
-        """获取所有团队信息"""
+        """Get all team information"""
         return [
             {
                 "name": team.team_name,
@@ -184,7 +184,7 @@ class TeamDelegator:
         Args:
             team_name: 团队名称
             brief: 任务简述
-            policy: 完成策略（默认使用团队配置）
+            policy: 完成策略（默认使用Team Config）
             timeout_seconds: 超时时间（秒）
             context: 上下文信息（传递给各 Bot）
             on_result: 结果回调函数
@@ -415,11 +415,11 @@ def register_team_as_skill(
     gateway=None
 ) -> bool:
     """
-    将团队注册为协调者 Bot 的可调用技能
+    将团队注册为Coordinator Bot 的可调用技能
 
     Args:
         team_name: 团队名称
-        coordinator_bot: 协调者 Bot 名称
+        coordinator_bot: Coordinator Bot 名称
         description: 技能描述
         gateway: Gateway 实例
 

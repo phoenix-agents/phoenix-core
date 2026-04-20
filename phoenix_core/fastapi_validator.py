@@ -91,7 +91,7 @@ def validate_request(model_cls: Type[BaseModel], source: str = 'json'):
                 raise HTTPException(
                     status_code=500,
                     detail={
-                        "error": "服务器内部错误",
+                        "error": "Server内部错误",
                         "details": str(e)
                     }
                 )

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Phoenix Core - 远程调试集成模块 (v1.3 增强版)
+Phoenix Core - Remote Debug集成模块 (v1.3 增强版)
 
 功能:
-1. 自动连接调试服务器
+1. 自动连接调试Server
 2. 支持远程日志查看
 3. 支持远程配置更新
 4. 支持远程代码执行
-5. 设备认证和授权
+5. Device认证和授权
 
 Usage:
     from phoenix_core.remote_integration import RemoteDebugger
@@ -43,9 +43,9 @@ logger = logging.getLogger(__name__)
 
 class RemoteDebugger:
     """
-    远程调试器
+    Remote Debug器
 
-    连接到中央调试服务器，允许远程协助新用户
+    Connected to中央调试Server，允许远程协助新用户
     """
 
     def __init__(
@@ -74,7 +74,7 @@ class RemoteDebugger:
         self._register_default_commands()
 
     def _generate_device_id(self) -> str:
-        """生成设备 ID"""
+        """生成Device ID"""
         hostname = socket.gethostname()
         mac = hashlib.md5(
             str(uuid.getnode()).encode()
@@ -82,7 +82,7 @@ class RemoteDebugger:
         return f"{hostname}-{mac}"
 
     def _collect_device_info(self) -> Dict:
-        """收集设备信息"""
+        """收集Device信息"""
         return {
             "hostname": socket.gethostname(),
             "platform": sys.platform,
@@ -106,13 +106,13 @@ class RemoteDebugger:
         self._commands["run_diagnostic"] = self._cmd_run_diagnostic
 
     async def connect(self) -> bool:
-        """连接到调试服务器"""
+        """Connected to调试Server"""
         if not WEBSOCKETS_AVAILABLE:
-            logger.warning("websockets 未安装，远程调试不可用")
+            logger.warning("websockets 未安装，Remote Debug不可用")
             return False
 
         if not self.server_url:
-            logger.info("远程调试未配置 (缺少 server_url)")
+            logger.info("Remote Debug未配置 (缺少 server_url)")
             return False
 
         ws_url = f"ws://{self.server_url}/ws/debug/{self.device_id}"
@@ -122,9 +122,9 @@ class RemoteDebugger:
         try:
             self.ws = await websockets.connect(ws_url, ping_interval=20)
             self.connected = True
-            logger.info(f"✅ 已连接到调试服务器：{self.server_url}")
+            logger.info(f"✅ 已Connected to调试Server：{self.server_url}")
 
-            # 发送设备信息
+            # 发送Device信息
             await self._send_device_info()
 
             return True
@@ -133,7 +133,7 @@ class RemoteDebugger:
             return False
 
     async def _send_device_info(self):
-        """发送设备信息到服务器"""
+        """发送Device信息到Server"""
         message = {
             "type": "device_info",
             "info": self._device_info
@@ -141,7 +141,7 @@ class RemoteDebugger:
         await self.ws.send(json.dumps(message, ensure_ascii=False))
 
     async def send_log(self, level: str, message: str):
-        """发送日志到服务器"""
+        """发送日志到Server"""
         if self.ws and self.connected:
             try:
                 await self.ws.send(json.dumps({
@@ -177,7 +177,7 @@ class RemoteDebugger:
             return 0.0
 
     async def _message_loop(self):
-        """监听服务器消息"""
+        """监听Server消息"""
         try:
             async for message in self.ws:
                 try:
@@ -191,11 +191,11 @@ class RemoteDebugger:
             logger.error(f"消息循环错误：{e}")
 
     async def _handle_message(self, message: Dict):
-        """处理服务器消息"""
+        """处理Server消息"""
         msg_type = message.get("type")
 
         if msg_type == "welcome":
-            logger.info(f"📡 服务器欢迎：{message.get('message', '')}")
+            logger.info(f"📡 Server欢迎：{message.get('message', '')}")
 
         elif msg_type == "command":
             command = message.get("command")
@@ -224,7 +224,7 @@ class RemoteDebugger:
             }))
 
         elif msg_type == "disconnect":
-            logger.info(f"📴 服务器要求断开：{message.get('reason', '')}")
+            logger.info(f"📴 Server要求断开：{message.get('reason', '')}")
             self.connected = False
 
     async def _execute_command(self, command: str, args: Dict) -> Dict:
@@ -459,10 +459,10 @@ class RemoteDebugger:
             await asyncio.sleep(self.heartbeat_interval)
 
     async def start_background(self):
-        """在后台启动远程调试"""
+        """在后台启动Remote Debug"""
         loop = asyncio.get_event_loop()
         task = loop.create_task(self.run_loop())
-        logger.info("📡 远程调试客户端已在后台启动")
+        logger.info("📡 Remote Debug客户端已在后台启动")
         return task
 
 
@@ -489,7 +489,7 @@ def get_debugger() -> Optional[RemoteDebugger]:
 
 
 async def start_remote_debug() -> Optional[asyncio.Task]:
-    """启动远程调试客户端"""
+    """启动Remote Debug客户端"""
     debugger = get_debugger()
     if debugger:
         return await debugger.start_background()

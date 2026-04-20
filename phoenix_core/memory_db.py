@@ -516,4 +516,4 @@ def start_backup_scheduler(interval_hours: int = 24):
 
     thread = threading.Thread(target=_run, daemon=True)
     thread.start()
-    logger.info(f"[MemoryDB] 备份调度已启动 (间隔={interval_hours}h)")
+    logger.info(f"[MemoryDB] 备份调度Started (间隔={interval_hours}h)")

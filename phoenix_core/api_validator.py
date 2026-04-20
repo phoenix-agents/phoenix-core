@@ -56,7 +56,7 @@ def validate_request(model_cls: Type[BaseModel], source: str = 'json'):
         def wrapper(*args, **kwargs):
             if not FLASK_AVAILABLE:
                 logger.error("Flask 不可用，api_validator 需要安装 Flask")
-                return jsonify({"error": "服务器配置错误：Flask 未安装"}), 500
+                return jsonify({"error": "Server配置错误：Flask 未安装"}), 500
 
             # 1. 提取请求数据
             if source == 'json':
@@ -87,7 +87,7 @@ def validate_request(model_cls: Type[BaseModel], source: str = 'json'):
             except Exception as e:
                 logger.error(f"API 校验异常：{e}")
                 return jsonify({
-                    "error": "服务器内部错误",
+                    "error": "Server内部错误",
                     "details": str(e)
                 }), 500
 
@@ -123,7 +123,7 @@ def validate_request_async(model_cls: Type[BaseModel], source: str = 'json'):
         async def wrapper(*args, **kwargs):
             if not FLASK_AVAILABLE:
                 logger.error("Flask 不可用，api_validator 需要安装 Flask")
-                return jsonify({"error": "服务器配置错误：Flask 未安装"}), 500
+                return jsonify({"error": "Server配置错误：Flask 未安装"}), 500
 
             # 1. 提取请求数据
             if source == 'json':

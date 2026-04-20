@@ -133,7 +133,7 @@ class FeishuMessageChannel(MessageChannel):
         self._message_callback = callback
 
     async def disconnect(self) -> None:
-        """断开连接"""
+        """Disconnected"""
         self._client = None
 
     def _parse_feishu_message(self, data: dict) -> PlatformMessage:

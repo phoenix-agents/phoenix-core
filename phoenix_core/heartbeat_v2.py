@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phoenix Core Heartbeat v2 - 独立心跳文件模式
+Phoenix Core Heartbeat v2 - Standalone心跳文件模式
 
 每个 Bot 写自己的心跳文件，避免并发冲突
 

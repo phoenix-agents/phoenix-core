@@ -168,9 +168,9 @@ class CoreBrain:
         self.skill_learner = get_learner()
         logger.info("  ✓ 技能学习者已加载")
 
-        # Phase 2: 团队委托器
+        # Phase 2: Team Delegation器
         self.team_delegator = get_team_delegator(gateway=None, config_loader=None)
-        logger.info(f"  ✓ 团队委托器已加载 ({len(self.team_delegator.teams)} 个团队)")
+        logger.info(f"  ✓ Team Delegation器已加载 ({len(self.team_delegator.teams)} 个团队)")
 
         # 上下文管理 (内存缓存)
         self.contexts: Dict[str, Dict] = {}
@@ -520,7 +520,7 @@ class CoreBrain:
             )
 
         try:
-            # 连接 MCP 服务器
+            # 连接 MCP Server
             await self.mcp_client.connect_server("filesystem")
 
             # 调用工具
@@ -896,7 +896,7 @@ async def delegate_to_team(self, team_name: str, brief: str, context: Dict[str, 
             "error": "TeamDelegator not available"
         }
 
-    # 执行团队委托
+    # 执行Team Delegation
     result = await self.team_delegator.delegate_to_team(
         team_name=team_name,
         brief=brief,
@@ -938,7 +938,7 @@ def _keyword_fallback_decompose(self, user_query: str) -> List[str]:
         "框架": "编导",
         "分镜": "编导",
         "技术": "场控",
-        "设备": "场控",
+        "Device": "场控",
         "推流": "场控",
         "客服": "客服",
         "用户": "客服",
