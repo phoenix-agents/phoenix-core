@@ -1,0 +1,82 @@
+# Bot 注册清单
+# 添加新 Bot：复制一个 bot 块，修改 id/name/workspace 即可
+bots:
+  - id: "xiaoxiaoqian"
+    name: "小小谦"
+    role: "controller"
+    workspace: "workspaces/小小谦"
+    teams:
+      - "管理团队"
+    enabled: true
+    model: "qwen3.6-plus"
+    provider: "coding-plan"
+
+  - id: "yunying"
+    name: "运营"
+    role: "worker"
+    workspace: "workspaces/运营"
+    teams:
+      - "内容团队"
+    enabled: true
+    model: "qwen3.6-plus"
+    provider: "coding-plan"
+
+  - id: "changkong"
+    name: "场控"
+    role: "worker"
+    workspace: "workspaces/场控"
+    teams:
+      - "内容团队"
+    enabled: true
+    model: "qwen3.6-plus"
+    provider: "coding-plan"
+
+  - id: "biandao"
+    name: "编导"
+    role: "worker"
+    workspace: "workspaces/编导"
+    teams:
+      - "内容团队"
+    enabled: true
+    model: "qwen3.6-plus"
+    provider: "coding-plan"
+
+  - id: "kefu"
+    name: "客服"
+    role: "worker"
+    workspace: "workspaces/客服"
+    teams:
+      - "商务团队"
+    enabled: true
+    model: "qwen3.6-plus"
+    provider: "coding-plan"
+
+  - id: "jianji"
+    name: "剪辑"
+    role: "worker"
+    workspace: "workspaces/剪辑"
+    teams:
+      - "制作团队"
+    enabled: true
+    model: "qwen3.6-plus"
+    provider: "coding-plan"
+
+  - id: "meigong"
+    name: "美工"
+    role: "worker"
+    workspace: "workspaces/美工"
+    teams:
+      - "制作团队"
+    enabled: true
+    model: "qwen3.6-plus"
+    provider: "coding-plan"
+
+  - id: "qudao"
+    name: "渠道"
+    role: "worker"
+    workspace: "workspaces/渠道"
+    teams:
+      - "商务团队"
+    enabled: true
+    model: "qwen3.6-plus"
+    provider: "coding-plan"

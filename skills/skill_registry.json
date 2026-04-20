@@ -1,0 +1,584 @@
+{
+  "last_updated": "2026-04-14T23:32:08.092909",
+  "source": "phoenix-self-hosted",
+  "description": "Phoenix Core 自建技能市场（精简版）",
+  "skills": [
+    {
+      "id": "web-search",
+      "name": "Web Search",
+      "description": "使用 Google/Bing 搜索网络信息",
+      "version": "1.0.0",
+      "category": "research",
+      "status": "active",
+      "source": "phoenix-official",
+      "author": "Phoenix Core Team",
+      "license": "MIT",
+      "path": "skills/pls-office-docs",
+      "tags": [
+        "search",
+        "research",
+        "web"
+      ],
+      "created_at": "2026-04-14T00:00:00Z",
+      "updated_at": "2026-04-14T00:00:00Z",
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 5,
+        "audited_at": "2026-04-14T23:25:58.163541",
+        "recommendation": "approved"
+      },
+      "activation_count": 0,
+      "success_rate": 1.0
+    },
+    {
+      "id": "github-monitor",
+      "name": "GitHub Monitor",
+      "description": "监控 GitHub trending 项目，发现 AI/Agent/Skills 相关优质项目",
+      "version": "1.0.0",
+      "category": "development",
+      "status": "active",
+      "source": "phoenix-official",
+      "author": "Phoenix Core Team",
+      "license": "MIT",
+      "path": "github_monitor.py",
+      "tags": [
+        "github",
+        "monitor",
+        "research",
+        "ai-agent"
+      ],
+      "created_at": "2026-04-14T00:00:00Z",
+      "updated_at": "2026-04-14T21:30:00Z",
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 15,
+        "audited_at": "2026-04-14T23:25:58.163560",
+        "recommendation": "approved"
+      },
+      "activation_count": 1,
+      "success_rate": 1.0
+    },
+    {
+      "id": "security-police",
+      "name": "Security Police",
+      "description": "安全警察系统，自动巡查技能和系统安全",
+      "version": "1.0.0",
+      "category": "security",
+      "status": "active",
+      "source": "phoenix-official",
+      "author": "Phoenix Core Team",
+      "license": "MIT",
+      "path": "security_police.py",
+      "tags": [
+        "security",
+        "audit",
+        "firewall",
+        "quarantine"
+      ],
+      "created_at": "2026-04-14T00:00:00Z",
+      "updated_at": "2026-04-14T21:30:00Z",
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 5,
+        "audited_at": "2026-04-14T23:25:58.163565",
+        "recommendation": "approved"
+      },
+      "activation_count": 1,
+      "success_rate": 1.0
+    },
+    {
+      "id": "code-reviewer",
+      "name": "Code Reviewer",
+      "description": "审查代码质量、安全性和最佳实践",
+      "version": "1.0.0",
+      "category": "development",
+      "tags": [
+        "code-review",
+        "quality",
+        "security"
+      ],
+      "source": "anthropics/skills",
+      "reference_url": "https://github.com/anthropics/skills",
+      "status": "active",
+      "author": "Reference",
+      "license": "MIT",
+      "created_at": "2026-04-14T21:51:19.582732",
+      "updated_at": "2026-04-14T21:53:22.212225",
+      "activation_count": 0,
+      "success_rate": 1.0,
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 0,
+        "audited_at": "2026-04-14T23:25:58.163568",
+        "recommendation": "approved"
+      },
+      "path": "skills/code-reviewer"
+    },
+    {
+      "id": "unit-test-generator",
+      "name": "Unit Test Generator",
+      "description": "为代码生成单元测试用例",
+      "version": "1.0.0",
+      "category": "development",
+      "tags": [
+        "testing",
+        "code-generation"
+      ],
+      "source": "anthropics/skills",
+      "reference_url": "https://github.com/anthropics/skills",
+      "status": "active",
+      "author": "Reference",
+      "license": "MIT",
+      "created_at": "2026-04-14T21:51:19.582774",
+      "updated_at": "2026-04-14T21:51:19.582780",
+      "activation_count": 0,
+      "success_rate": 1.0,
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 0,
+        "audited_at": "2026-04-14T23:25:58.163572",
+        "recommendation": "approved"
+      }
+    },
+    {
+      "id": "documentation-writer",
+      "name": "Documentation Writer",
+      "description": "编写清晰的技术文档和 API 文档",
+      "version": "1.0.0",
+      "category": "productivity",
+      "tags": [
+        "documentation",
+        "writing"
+      ],
+      "source": "anthropics/skills",
+      "reference_url": "https://github.com/anthropics/skills",
+      "status": "active",
+      "author": "Reference",
+      "license": "MIT",
+      "created_at": "2026-04-14T21:51:19.582791",
+      "updated_at": "2026-04-14T21:51:19.582795",
+      "activation_count": 0,
+      "success_rate": 1.0,
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 0,
+        "audited_at": "2026-04-14T23:25:58.163575",
+        "recommendation": "approved"
+      }
+    },
+    {
+      "id": "security-analyst",
+      "name": "Security Analyst",
+      "description": "分析代码安全漏洞和潜在风险",
+      "version": "1.0.0",
+      "category": "security",
+      "tags": [
+        "security",
+        "vulnerability",
+        "analysis"
+      ],
+      "source": "anthropics/skills",
+      "reference_url": "https://github.com/anthropics/skills",
+      "status": "active",
+      "author": "Reference",
+      "license": "MIT",
+      "created_at": "2026-04-14T21:51:19.582811",
+      "updated_at": "2026-04-14T21:51:19.582815",
+      "activation_count": 0,
+      "success_rate": 1.0,
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 5,
+        "audited_at": "2026-04-14T23:25:58.163578",
+        "recommendation": "approved"
+      }
+    },
+    {
+      "id": "data-analyst",
+      "name": "Data Analyst",
+      "description": "分析数据并生成可视化报告",
+      "version": "1.0.0",
+      "category": "analysis",
+      "tags": [
+        "data",
+        "visualization",
+        "reporting"
+      ],
+      "source": "anthropics/skills",
+      "reference_url": "https://github.com/anthropics/skills",
+      "status": "active",
+      "author": "Reference",
+      "license": "MIT",
+      "created_at": "2026-04-14T21:51:19.582823",
+      "updated_at": "2026-04-14T21:51:19.582827",
+      "activation_count": 0,
+      "success_rate": 1.0,
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 0,
+        "audited_at": "2026-04-14T23:25:58.163581",
+        "recommendation": "approved"
+      }
+    },
+    {
+      "id": "research-assistant",
+      "name": "Research Assistant",
+      "description": "搜索和整理网络信息，生成研究报告",
+      "version": "1.0.0",
+      "category": "research",
+      "tags": [
+        "research",
+        "search",
+        "summarization"
+      ],
+      "source": "anthropics/skills",
+      "reference_url": "https://github.com/anthropics/skills",
+      "status": "active",
+      "author": "Reference",
+      "license": "MIT",
+      "created_at": "2026-04-14T21:51:19.582834",
+      "updated_at": "2026-04-14T21:53:22.212249",
+      "activation_count": 0,
+      "success_rate": 1.0,
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 0,
+        "audited_at": "2026-04-14T23:25:58.163584",
+        "recommendation": "approved"
+      },
+      "path": "skills/research-assistant"
+    },
+    {
+      "id": "meeting-notetaker",
+      "name": "Meeting Notetaker",
+      "description": "记录会议纪要和待办事项",
+      "version": "1.0.0",
+      "category": "productivity",
+      "tags": [
+        "meeting",
+        "notes",
+        "productivity"
+      ],
+      "source": "anthropics/skills",
+      "reference_url": "https://github.com/anthropics/skills",
+      "status": "active",
+      "author": "Reference",
+      "license": "MIT",
+      "created_at": "2026-04-14T21:51:19.582852",
+      "updated_at": "2026-04-14T21:51:19.582857",
+      "activation_count": 0,
+      "success_rate": 1.0,
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 0,
+        "audited_at": "2026-04-14T23:25:58.163587",
+        "recommendation": "approved"
+      }
+    },
+    {
+      "id": "email-assistant",
+      "name": "Email Assistant",
+      "description": "撰写、回复和整理邮件",
+      "version": "1.0.0",
+      "category": "communication",
+      "tags": [
+        "email",
+        "writing",
+        "communication"
+      ],
+      "source": "anthropics/skills",
+      "reference_url": "https://github.com/anthropics/skills",
+      "status": "active",
+      "author": "Reference",
+      "license": "MIT",
+      "created_at": "2026-04-14T21:51:19.582864",
+      "updated_at": "2026-04-14T21:51:19.582868",
+      "activation_count": 0,
+      "success_rate": 1.0,
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 0,
+        "audited_at": "2026-04-14T23:25:58.163590",
+        "recommendation": "approved"
+      }
+    },
+    {
+      "id": "github-pr-helper",
+      "name": "GitHub PR Helper",
+      "description": "协助审查 Pull Request 和 Issue 管理",
+      "version": "1.0.0",
+      "category": "development",
+      "tags": [
+        "github",
+        "code-review",
+        "pr"
+      ],
+      "source": "awesome-claude-skills",
+      "reference_url": "https://github.com/ComposioHQ/awesome-claude-skills",
+      "status": "active",
+      "author": "Reference",
+      "license": "MIT",
+      "created_at": "2026-04-14T21:51:19.582875",
+      "updated_at": "2026-04-14T21:53:22.212261",
+      "activation_count": 0,
+      "success_rate": 1.0,
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 5,
+        "audited_at": "2026-04-14T23:25:58.163592",
+        "recommendation": "approved"
+      },
+      "path": "skills/github-pr-helper"
+    },
+    {
+      "id": "content-writer",
+      "name": "Content Writer",
+      "description": "撰写博客文章、社交媒体内容",
+      "version": "1.0.0",
+      "category": "creative",
+      "tags": [
+        "writing",
+        "content",
+        "blog"
+      ],
+      "source": "awesome-claude-skills",
+      "reference_url": "https://github.com/ComposioHQ/awesome-claude-skills",
+      "status": "active",
+      "author": "Reference",
+      "license": "MIT",
+      "created_at": "2026-04-14T21:51:19.582906",
+      "updated_at": "2026-04-14T21:51:19.582910",
+      "activation_count": 0,
+      "success_rate": 1.0,
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 0,
+        "audited_at": "2026-04-14T23:25:58.163598",
+        "recommendation": "approved"
+      }
+    },
+    {
+      "id": "api-tester",
+      "name": "API Tester",
+      "description": "测试 RESTful API 并生成测试报告",
+      "version": "1.0.0",
+      "category": "development",
+      "tags": [
+        "api",
+        "testing",
+        "rest"
+      ],
+      "source": "awesome-claude-skills",
+      "reference_url": "https://github.com/ComposioHQ/awesome-claude-skills",
+      "status": "active",
+      "author": "Reference",
+      "license": "MIT",
+      "created_at": "2026-04-14T21:51:19.582928",
+      "updated_at": "2026-04-14T21:51:19.582931",
+      "activation_count": 0,
+      "success_rate": 1.0,
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 10,
+        "audited_at": "2026-04-14T23:25:58.163604",
+        "recommendation": "approved"
+      }
+    },
+    {
+      "id": "image-analyzer",
+      "name": "Image Analyzer",
+      "description": "分析图片内容并提取信息",
+      "version": "1.0.0",
+      "category": "analysis",
+      "tags": [
+        "image",
+        "vision",
+        "analysis"
+      ],
+      "source": "awesome-claude-skills",
+      "reference_url": "https://github.com/ComposioHQ/awesome-claude-skills",
+      "status": "active",
+      "author": "Reference",
+      "license": "MIT",
+      "created_at": "2026-04-14T21:51:19.582947",
+      "updated_at": "2026-04-14T21:51:19.582952",
+      "activation_count": 0,
+      "success_rate": 1.0,
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 0,
+        "audited_at": "2026-04-14T23:25:58.163607",
+        "recommendation": "approved"
+      }
+    },
+    {
+      "id": "language-tutor",
+      "name": "Language Tutor",
+      "description": "语言学习和练习助手",
+      "version": "1.0.0",
+      "category": "productivity",
+      "tags": [
+        "language",
+        "learning",
+        "education"
+      ],
+      "source": "awesome-claude-skills",
+      "reference_url": "https://github.com/ComposioHQ/awesome-claude-skills",
+      "status": "active",
+      "author": "Reference",
+      "license": "MIT",
+      "created_at": "2026-04-14T21:51:19.582959",
+      "updated_at": "2026-04-14T21:51:19.582963",
+      "activation_count": 0,
+      "success_rate": 1.0,
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 0,
+        "audited_at": "2026-04-14T23:25:58.163610",
+        "recommendation": "approved"
+      }
+    },
+    {
+      "id": "project-planner",
+      "name": "Project Planner",
+      "description": "制定项目计划和任务分解",
+      "version": "1.0.0",
+      "category": "productivity",
+      "tags": [
+        "planning",
+        "project-management"
+      ],
+      "source": "awesome-claude-skills",
+      "reference_url": "https://github.com/ComposioHQ/awesome-claude-skills",
+      "status": "active",
+      "author": "Reference",
+      "license": "MIT",
+      "created_at": "2026-04-14T21:51:19.582970",
+      "updated_at": "2026-04-14T21:51:19.582974",
+      "activation_count": 0,
+      "success_rate": 1.0,
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 0,
+        "audited_at": "2026-04-14T23:25:58.163613",
+        "recommendation": "approved"
+      }
+    },
+    {
+      "id": "affaan-m-everything-claude-code",
+      "name": "everything-claude-code",
+      "description": "Complete list of everything available for Claude Code - extensions, GUIs, clients and more",
+      "category": "development",
+      "tags": [
+        "claude-code",
+        "extensions",
+        "tools"
+      ],
+      "source": "github-high-value",
+      "reference_url": "https://github.com/affaan-m/everything-claude-code",
+      "github_stats": {
+        "stars": 155000,
+        "forks": 15500,
+        "language": "TypeScript"
+      },
+      "status": "active",
+      "author": "GitHub",
+      "license": "MIT",
+      "version": "1.0.0",
+      "discovery_reason": "高价值：155k stars, Claude Code 工具集合",
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 10,
+        "audited_at": "2026-04-14T23:25:58.163616",
+        "recommendation": "approved"
+      }
+    },
+    {
+      "id": "obra-superpowers",
+      "name": "superpowers",
+      "description": "Superpowers for Claude Code - 30+ powerful features for enhanced productivity",
+      "category": "development",
+      "tags": [
+        "claude-code",
+        "productivity",
+        "tools"
+      ],
+      "source": "github-high-value",
+      "reference_url": "https://github.com/obra/superpowers",
+      "github_stats": {
+        "stars": 151000,
+        "forks": 15100,
+        "language": "TypeScript"
+      },
+      "status": "active",
+      "author": "GitHub",
+      "license": "MIT",
+      "version": "1.0.0",
+      "discovery_reason": "高价值：151k stars, Claude Code 增强工具",
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 15,
+        "audited_at": "2026-04-14T23:25:58.163619",
+        "recommendation": "approved"
+      }
+    },
+    {
+      "id": "anthropics-skills",
+      "name": "skills",
+      "description": "Anthropics official skills repository - reference implementations",
+      "category": "development",
+      "tags": [
+        "anthropic",
+        "official",
+        "skills"
+      ],
+      "source": "github-high-value",
+      "reference_url": "https://github.com/anthropics/skills",
+      "github_stats": {
+        "stars": 117000,
+        "forks": 11700,
+        "language": "Python"
+      },
+      "status": "active",
+      "author": "Anthropic",
+      "license": "MIT",
+      "version": "1.0.0",
+      "discovery_reason": "高价值：117k stars, Anthropic 官方技能",
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 0,
+        "audited_at": "2026-04-14T23:25:58.163621",
+        "recommendation": "approved"
+      }
+    },
+    {
+      "id": "crewAIInc-crewAI",
+      "name": "crewAI",
+      "description": "Multi-agent collaboration framework - 多 Agent 协作框架",
+      "category": "development",
+      "tags": [
+        "agent",
+        "collaboration",
+        "framework"
+      ],
+      "source": "github-high-value",
+      "reference_url": "https://github.com/crewAIInc/crewAI",
+      "github_stats": {
+        "stars": 48000,
+        "forks": 4800,
+        "language": "Python"
+      },
+      "status": "active",
+      "author": "crewAI",
+      "license": "MIT",
+      "version": "1.0.0",
+      "discovery_reason": "高价值：48k stars, 多 Agent 协作",
+      "security_audit": {
+        "status": "reviewed",
+        "risk_score": 20,
+        "audited_at": "2026-04-14T23:25:58.163627",
+        "recommendation": "approved"
+      }
+    }
+  ]
+}

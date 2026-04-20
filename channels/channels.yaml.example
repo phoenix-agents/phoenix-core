@@ -1,0 +1,108 @@
+# Phoenix Core 渠道配置文件
+# 此文件控制 Bot 连接哪些消息平台
+
+channels:
+  # ==================== Discord ====================
+  discord:
+    enabled: true
+    name: Discord
+
+    # 凭证 (使用环境变量引用)
+    credentials:
+      bot_token: "${DISCORD_BOT_TOKEN}"
+      client_id: "${DISCORD_CLIENT_ID}"
+
+    # 平台特定设置
+    settings:
+      allow_bots: false          # 是否允许处理其他 Bot 的消息
+      prefix: "!"                # 命令前缀
+
+    # 安全设置
+    dm_policy: pairing           # pairing | open | closed
+                                 # pairing: DM 需要配对码批准
+                                 # open: 允许所有 DM
+                                 # closed: 禁止所有 DM
+
+    # 允许列表 (用户 ID 或频道 ID)
+    allow_from: []
+
+    # 拒绝列表
+    deny_from: []
+
+  # ==================== 企业微信 ====================
+  # wechat:
+  #   enabled: false
+  #   name: 企业微信
+  #
+  #   credentials:
+  #     corp_id: "${WECHAT_CORP_ID}"
+  #     secret: "${WECHAT_SECRET}"
+  #     token: "${WECHAT_TOKEN}"
+  #     aes_key: "${WECHAT_AES_KEY}"
+  #     agent_id: "${WECHAT_AGENT_ID}"
+  #
+  #   settings:
+  #     webhook_port: 8080       # 回调端口
+  #
+  #   dm_policy: closed
+  #   allow_from: []
+
+  # ==================== Telegram ====================
+  # telegram:
+  #   enabled: false
+  #   name: Telegram
+  #
+  #   credentials:
+  #     bot_token: "${TELEGRAM_BOT_TOKEN}"
+  #
+  #   settings:
+  #     webhook_url: ""          # Webhook URL (可选)
+  #
+  #   dm_policy: open
+  #   allow_from: []
+
+  # ==================== Slack ====================
+  # slack:
+  #   enabled: false
+  #   name: Slack
+  #
+  #   credentials:
+  #     bot_token: "${SLACK_BOT_TOKEN}"
+  #     signing_secret: "${SLACK_SIGNING_SECRET}"
+  #
+  #   settings:
+  #     app_token: "${SLACK_APP_TOKEN}"  # Socket Mode
+  #
+  #   dm_policy: pairing
+  #   allow_from: []
+
+  # ==================== 钉钉 ====================
+  # dingtalk:
+  #   enabled: false
+  #   name: 钉钉
+  #
+  #   credentials:
+  #     app_key: "${DINGTALK_APP_KEY}"
+  #     app_secret: "${DINGTALK_APP_SECRET}"
+  #
+  #   settings:
+  #     webhook: "${DINGTALK_WEBHOOK}"
+  #
+  #   dm_policy: closed
+
+  # ==================== 飞书 ====================
+  feishu:
+    enabled: false
+    name: 飞书
+
+    credentials:
+      app_id: "${FEISHU_APP_ID}"
+      app_secret: "${FEISHU_APP_SECRET}"
+      verification_token: "${FEISHU_VERIFICATION_TOKEN}"  # 可选
+      encrypt_key: "${FEISHU_ENCRYPT_KEY}"  # 可选
+
+    settings:
+      use_websocket: true  # 使用长连接模式，无需公网 IP
+
+    dm_policy: closed
+    allow_from: []

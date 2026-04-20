@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phoenix Core - Neural Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* ===== 未来感设计系统 - Phoenix Core v2.0 ===== */
+
+        /* 色彩系统 - 赛博朋克配色 */
+        :root {
+            /* 深色背景 */
+            --bg-primary: #0a0f1f;
+            --bg-secondary: #1a1f3f;
+            --bg-card: rgba(26, 31, 63, 0.8);
+            --bg-glass: rgba(10, 15, 31, 0.7);
+
+            /* 霓虹强调色 */
+            --neon-cyan: #00f0ff;
+            --neon-pink: #ff00ff;
+            --neon-green: #00ff88;
+            --neon-blue: #4f46e5;
+
+            /* 状态色 */
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+
+            /* 文字 */
+            --text-primary: #ffffff;
+            --text-secondary: #a5b4fc;
+            --text-muted: #64748b;
+
+            /* 间距 */
+            --spacing-4: 4px;
+            --spacing-8: 8px;
+            --spacing-16: 16px;
+            --spacing-24: 24px;
+            --spacing-32: 32px;
+            --spacing-48: 48px;
+
+            /* 圆角 */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+
+            /* 发光效果 */
+            --glow-cyan: 0 0 10px rgba(0, 240, 255, 0.5), inset 0 0 10px rgba(0, 240, 255, 0.1);
+            --glow-pink: 0 0 10px rgba(255, 0, 255, 0.5);
+            --glow-green: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        /* 全局重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            /* 背景网格纹理 */
+            background-image:
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-blue);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-cyan); }
+
+        /* ===== Header 头部 ===== */
+        .header {
+            background: linear-gradient(135deg,
+                rgba(10, 15, 31, 0.95) 0%,
+                rgba(26, 31, 63, 0.9) 100%);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+            padding: var(--spacing-24) var(--spacing-48);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 30px rgba(0, 240, 255, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-16);
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 240, 255, 0.3);
+            letter-spacing: 2px;
+        }
+
+        .logo-tagline {
+            font-size: 14px;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: var(--spacing-8);
+        }
+
+        .nav-link {
+            padding: var(--spacing-8) var(--spacing-16);
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+            font-size: 14px;
+        }
+
+        .nav-link:hover {
+            color: var(--neon-cyan);
+            border-color: rgba(0, 240, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+        }
+
+        .nav-link.active {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--neon-cyan);
+            border-color: var(--neon-cyan);
+        }
+
+        /* ===== 主容器 ===== */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: var(--spacing-32);
+        }
+
+        /* ===== KPI 统计卡片 ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--spacing-24);
+            margin-bottom: var(--spacing-32);
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-24);
+            border: 1px solid rgba(0, 240, 255, 0.15);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        /* 卡片发光边框动画 */
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,
+                transparent,
+                var(--neon-cyan),
+                var(--neon-pink),
+                transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow:
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                0 0 30px rgba(0, 240, 255, 0.2);
+            border-color: rgba(0, 240, 255, 0.4);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card h3 {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: var(--spacing-12);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card .value {
+            font-size: 42px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 240, 255, 0.3);
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        .stat-card .change {
+            font-size: 13px;
+            color: var(--success);
+            margin-top: var(--spacing-8);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-4);
+        }
+
+        .stat-card .change::before {
+            content: '▲';
+            font-size: 10px;
+        }
+
+        /* ===== 图表网格 ===== */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-24);
+            margin-bottom: var(--spacing-32);
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-24);
+            border: 1px solid rgba(79, 70, 229, 0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .chart-card:hover {
+            border-color: rgba(79, 70, 229, 0.4);
+            box-shadow: 0 0 30px rgba(79, 70, 229, 0.15);
+        }
+
+        .chart-card h3 {
+            font-size: 16px;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-20);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-8);
+        }
+
+        .chart-card h3::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(180deg, var(--neon-cyan), var(--neon-blue));
+            border-radius: 2px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 320px;
+        }
+
+        /* ===== 失败模式分析 ===== */
+        .failure-patterns {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-16);
+            margin-top: var(--spacing-20);
+        }
+
+        .pattern-item {
+            background: rgba(248, 249, 250, 0.05);
+            padding: var(--spacing-20);
+            border-radius: var(--radius-md);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .pattern-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: scale(1.02);
+        }
+
+        .pattern-item .name {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-8);
+        }
+
+        .pattern-item .count {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--error);
+            text-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .pattern-item .percentage {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: var(--spacing-4);
+        }
+
+        .pattern-item .trend {
+            font-size: 12px;
+            margin-top: var(--spacing-8);
+            padding: var(--spacing-4) var(--spacing-8);
+            border-radius: var(--radius-sm);
+            display: inline-block;
+        }
+
+        .pattern-item .trend.up {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+        }
+
+        .pattern-item .trend.down {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        /* ===== 技能血缘树 ===== */
+        .lineage-tree {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-24);
+            border: 1px solid rgba(0, 240, 255, 0.15);
+            backdrop-filter: blur(10px);
+        }
+
+        .lineage-tree h3 {
+            font-size: 16px;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-20);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-8);
+        }
+
+        .lineage-tree h3::before {
+            content: '🔗';
+            font-size: 20px;
+        }
+
+        .skill-category {
+            background: rgba(79, 70, 229, 0.1);
+            padding: var(--spacing-20);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-16);
+            border: 1px solid rgba(79, 70, 229, 0.2);
+        }
+
+        .skill-category h4 {
+            color: var(--neon-cyan);
+            margin-bottom: var(--spacing-12);
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-8);
+        }
+
+        .skill-category h4::before {
+            content: '';
+            width: 3px;
+            height: 16px;
+            background: var(--neon-cyan);
+            border-radius: 2px;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: var(--spacing-12);
+        }
+
+        .skill-item {
+            background: var(--bg-glass);
+            padding: var(--spacing-16);
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .skill-item:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .skill-item .name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-4);
+            font-size: 14px;
+        }
+
+        .skill-item .stats {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .skill-item .success-rate {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        /* ===== 加载状态 ===== */
+        .loading {
+            text-align: center;
+            padding: var(--spacing-48);
+            color: var(--text-muted);
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 40px;
+            margin: -20px 0 0 -20px;
+            border: 2px solid rgba(0, 240, 255, 0.2);
+            border-top-color: var(--neon-cyan);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== 错误提示 ===== */
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--error);
+            padding: var(--spacing-20);
+            border-radius: var(--radius-md);
+            margin: var(--spacing-20) 0;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-12);
+        }
+
+        .error::before {
+            content: '⚠️';
+            font-size: 20px;
+        }
+
+        /* ===== 脉冲动画 ===== */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-4);
+            padding: var(--spacing-4) var(--spacing-12);
+            background: rgba(16, 185, 129, 0.15);
+            border-radius: var(--radius-xl);
+            font-size: 12px;
+            color: var(--success);
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* ===== 响应式断点 ===== */
+        @media (max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .failure-patterns { grid-template-columns: 1fr; }
+            .header { padding: var(--spacing-16); }
+            .nav-links { display: none; }
+        }
+
+        /* ===== Chart.js 暗色主题覆盖 ===== */
+        canvas {
+            filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.1));
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo">PHOENIX CORE</div>
+                <div class="logo-tagline">NEURAL SKILL NETWORK</div>
+            </div>
+            <nav class="nav-links">
+                <a href="#" class="nav-link active">Dashboard</a>
+                <a href="#" class="nav-link">Skills</a>
+                <a href="#" class="nav-link">Tasks</a>
+                <a href="#" class="nav-link">Analytics</a>
+                <a href="#" class="nav-link">Settings</a>
+            </nav>
+            <div class="live-indicator">
+                <span class="live-dot"></span>
+                LIVE
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- KPI Statistics -->
+        <section class="stats-grid" id="statsGrid">
+            <div class="loading"></div>
+        </section>
+
+        <!-- Trend Charts -->
+        <section class="charts-grid">
+            <div class="chart-card">
+                <h3>Task Assessment Score Trend</h3>
+                <div class="chart-container">
+                    <canvas id="assessmentChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>Skill Success Rate Evolution</h3>
+                <div class="chart-container">
+                    <canvas id="skillChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Failure Analysis -->
+        <section class="chart-card" style="margin-bottom: 32px;">
+            <h3>Failure Pattern Analysis</h3>
+            <div class="failure-patterns" id="failurePatterns">
+                <div class="loading"></div>
+            </div>
+        </section>
+
+        <!-- Skill Lineage -->
+        <section class="lineage-tree">
+            <h3>Skill Lineage Network</h3>
+            <div id="lineageTree">
+                <div class="loading"></div>
+            </div>
+        </section>
+
+        <!-- GitHub Reports -->
+        <section class="github-reports" style="margin-top: 32px;">
+            <h3>📊 GitHub AI/Agent Trending Reports</h3>
+            <div id="githubReport" style="background: var(--bg-card); border-radius: var(--radius-lg); padding: 24px; border: 1px solid rgba(0, 240, 255, 0.1);">
+                <div class="loading">Loading GitHub reports...</div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // ===== Phoenix Core Dashboard v2.0 =====
+        // 未来感数据可视化
+
+        const API_BASE = 'http://localhost:8000/api';
+
+        // Chart.js 全局配置 - 暗色霓虹主题
+        Chart.defaults.color = '#a5b4fc';
+        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.05)';
+
+        async function loadDashboard() {
+            try {
+                await Promise.all([
+                    loadStats(),
+                    loadAssessmentTrend(),
+                    loadSkillSuccess(),
+                    loadFailurePatterns(),
+                    loadSkillLineage(),
+                    loadGitHubReport()
+                ]);
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+                document.getElementById('statsGrid').innerHTML =
+                    '<div class="error">Neural connection failed. Check backend status.</div>';
+            }
+        }
+
+        async function loadStats() {
+            const response = await fetch(`${API_BASE}/stats`);
+            const data = await response.json();
+
+            // 数字滚动动画效果
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card">
+                    <h3>Total Tasks Processed</h3>
+                    <div class="value" data-target="${data.total_tasks}">0</div>
+                    <div class="change">${data.completed_tasks} completed</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Pending Evaluation</h3>
+                    <div class="value" data-target="${data.pending_tasks}">0</div>
+                    <div class="change">Awaiting analysis</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Skills</h3>
+                    <div class="value" data-target="${data.total_skills}">0</div>
+                    <div class="change">${data.total_versions} versions deployed</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Avg Success Rate</h3>
+                    <div class="value" data-target="${(data.avg_success_rate * 100).toFixed(1)}">0</div>
+                    <div class="change">Across neural network</div>
+                </div>
+            `;
+
+            // 启动数字滚动动画
+            animateNumbers();
+        }
+
+        // 数字滚动动画
+        function animateNumbers() {
+            document.querySelectorAll('.value').forEach(el => {
+                const target = parseFloat(el.dataset.target);
+                const duration = 1500;
+                const start = performance.now();
+
+                const animate = (currentTime) => {
+                    const elapsed = currentTime - start;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const easeOut = 1 - Math.pow(1 - progress, 3);
+
+                    const current = target * easeOut;
+                    el.textContent = target % 1 === 0
+                        ? Math.floor(current).toLocaleString()
+                        : current.toFixed(1);
+
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    }
+                };
+
+                requestAnimationFrame(animate);
+            });
+        }
+
+        async function loadAssessmentTrend() {
+            const response = await fetch(`${API_BASE}/assessment-trend`);
+            const data = await response.json();
+
+            const ctx = document.getElementById('assessmentChart').getContext('2d');
+
+            // 创建渐变色
+            const gradient = ctx.createLinearGradient(0, 0, 0, 320);
+            gradient.addColorStop(0, 'rgba(0, 240, 255, 0.3)');
+            gradient.addColorStop(1, 'rgba(0, 240, 255, 0)');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.data.map(d => d.date.slice(5)),
+                    datasets: [{
+                        label: 'Assessment Score',
+                        data: data.data.map(d => d.score),
+                        borderColor: '#00f0ff',
+                        backgroundColor: gradient,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#0a0f1f',
+                        pointBorderColor: '#00f0ff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointHoverBackgroundColor: '#00f0ff',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(10, 15, 31, 0.9)',
+                            titleColor: '#00f0ff',
+                            bodyColor: '#a5b4fc',
+                            borderColor: 'rgba(0, 240, 255, 0.3)',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                label: (ctx) => `Score: ${ctx.parsed.y.toFixed(1)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 50,
+                            max: 100,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#64748b' }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#64748b' }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadSkillSuccess() {
+            const response = await fetch(`${API_BASE}/skill-success`);
+            const data = await response.json();
+
+            const skills = [...new Set(data.data.map(d => d.skill))];
+            // 霓虹配色方案
+            const colors = ['#00f0ff', '#ff00ff', '#00ff88', '#4f46e5', '#f59e0b'];
+
+            const datasets = skills.map((skill, i) => ({
+                label: skill,
+                data: data.data.filter(d => d.skill === skill).map(d => ({x: d.date, y: d.success_rate * 100})),
+                borderColor: colors[i % colors.length],
+                borderWidth: 2,
+                tension: 0.4,
+                pointRadius: 0,
+                pointHoverRadius: 6
+            }));
+
+            const ctx = document.getElementById('skillChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#a5b4fc',
+                                usePointStyle: true,
+                                pointStyle: 'line',
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(10, 15, 31, 0.9)',
+                            titleColor: '#ff00ff',
+                            bodyColor: '#a5b4fc',
+                            borderColor: 'rgba(255, 0, 255, 0.3)',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true,
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: { unit: 'day' },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#64748b' }
+                        },
+                        y: {
+                            min: 50,
+                            max: 100,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#64748b' }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadFailurePatterns() {
+            const response = await fetch(`${API_BASE}/failure-patterns`);
+            const data = await response.json();
+
+            document.getElementById('failurePatterns').innerHTML = data.data.map(p => `
+                <div class="pattern-item">
+                    <div class="name">${p.pattern}</div>
+                    <div class="count">${p.count}</div>
+                    <div class="percentage">${p.percentage}% of failures</div>
+                    <div class="trend ${p.trend === 'up' ? 'up' : 'down'}">
+                        ${p.trend === 'up' ? '↑' : '↓'} ${p.trend === 'up' ? 'Increasing' : 'Decreasing'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadSkillLineage() {
+            const response = await fetch(`${API_BASE}/skill-lineage`);
+            const data = await response.json();
+            renderLineageTree(data.data);
+        }
+
+        function renderLineageTree(data) {
+            if (!data.children || data.children.length === 0) {
+                document.getElementById('lineageTree').innerHTML =
+                    '<div style="color: #64748b; padding: 40px; text-align: center;">No skill lineage data available</div>';
+                return;
+            }
+
+            let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">';
+
+            data.children.forEach(category => {
+                html += `
+                    <div class="skill-category">
+                        <h4>${category.name}</h4>
+                        <div class="skills-grid">
+                `;
+
+                if (category.children) {
+                    category.children.forEach(skill => {
+                        const versions = skill.versions || [];
+                        const latestVersion = versions[versions.length - 1];
+                        html += `
+                            <div class="skill-item">
+                                <div class="name">${skill.name}</div>
+                                <div class="stats">
+                                    ${latestVersion
+                                        ? `<span class="success-rate">SR: ${(latestVersion.success_rate * 100).toFixed(0)}%</span>`
+                                        : 'No versions'}
+                                </div>
+                                <div class="stats" style="color: #64748b; margin-top: 4px;">
+                                    ${versions.length} version(s)
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                html += `</div></div>`;
+            });
+
+            html += '</div>';
+            document.getElementById('lineageTree').innerHTML = html;
+        }
+
+        async function loadGitHubReport() {
+            try {
+                const response = await fetch(`${API_BASE}/github-reports/latest`);
+                const data = await response.json();
+
+                if (data.content) {
+                    // 将 markdown 转换为 HTML
+                    const htmlContent = markdownToHtml(data.content);
+                    document.getElementById('githubReport').innerHTML = `
+                        <div style="font-size: 14px; line-height: 1.8;">
+                            <div style="margin-bottom: 16px; color: var(--text-muted);">
+                                📄 Latest Report: ${data.filename}
+                            </div>
+                            <div class="markdown-content" style="
+                                background: rgba(0, 0, 0, 0.2);
+                                padding: 20px;
+                                border-radius: 8px;
+                                border: 1px solid rgba(0, 240, 255, 0.1);
+                            ">
+                                ${htmlContent}
+                            </div>
+                            <div style="margin-top: 16px; text-align: right;">
+                                <a href="${API_BASE}/github-reports/latest" target="_blank"
+                                   style="color: var(--neon-cyan); text-decoration: none; font-size: 13px;">
+                                    View Raw Report →
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('githubReport').innerHTML =
+                        '<div style="color: var(--text-muted);">No GitHub reports available</div>';
+                }
+            } catch (error) {
+                console.error('Failed to load GitHub report:', error);
+                document.getElementById('githubReport').innerHTML =
+                    '<div class="error">Failed to load GitHub report</div>';
+            }
+        }
+
+        function markdownToHtml(md) {
+            // 简单的 markdown 转 HTML
+            let html = md
+                // 标题
+                .replace(/^### (.*$)/gim, '<h4 style="color: var(--neon-green); margin: 16px 0 8px;">$1</h3>')
+                .replace(/^## (.*$)/gim, '<h3 style="color: var(--neon-cyan); margin: 20px 0 10px;">$1</h2>')
+                .replace(/^# (.*$)/gim, '<h2 style="color: var(--neon-pink); margin: 24px 0 12px;">$1</h1>')
+                // 粗体
+                .replace(/\*\*(.*?)\*\*/gim, '<strong style="color: var(--neon-cyan);">$1</strong>')
+                // 斜体
+                .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+                // 链接
+                .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" target="_blank" style="color: var(--neon-blue); text-decoration: underline;">$1</a>')
+                // 表格行 (简单处理)
+                .replace(/^\|(.*)\|$/gim, '<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1);"><div style="grid-column: span 4;">$1</div></div>')
+                // 列表
+                .replace(/^\- (.*$)/gim, '<div style="padding: 4px 0; color: var(--text-secondary);">• $1</div>')
+                // 代码块
+                .replace(/`(.*?)`/gim, '<code style="background: rgba(0, 240, 255, 0.1); padding: 2px 6px; border-radius: 4px; color: var(--neon-cyan);">$1</code>')
+                // 换行
+                .replace(/\n/gim, '<br>');
+            return html;
+        }
+
+        // 页面加载完成
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# Phoenix Core 系统配置
+system:
+  name: "Phoenix Core"
+  version: "2.0"
+
+database:
+  memory: "shared_memory/memory_share.db"
+  tracing: "logs/tracing/tracing.db"
+  progress: "logs/progress/progress.db"
+  audit: "logs/audit/audit.db"
+
+features:
+  memory: true
+  tracing: true
+  audit: true
+  progress: true
+
+api:
+  host: "0.0.0.0"
+  port: 8001

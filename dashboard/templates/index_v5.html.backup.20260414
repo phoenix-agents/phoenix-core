@@ -1,0 +1,1914 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phoenix Core Dashboard v5.0 - 真实 API</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0f1f;
+            --bg-secondary: #16162a;
+            --bg-card: #1a1f3f;
+            --bg-hover: #2a2a4a;
+            --bg-active: #3a3a6a;
+
+            --neon-cyan: #00f0ff;
+            --neon-blue: #4a9eff;
+            --neon-purple: #8b5cf6;
+            --neon-green: #00ff88;
+
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+
+            --text-primary: #eaeaea;
+            --text-secondary: #a5b4fc;
+            --text-muted: #888;
+
+            --sidebar-width: 260px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app { display: flex; height: 100vh; }
+
+        /* ===== 侧边栏 ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-secondary);
+            border-right: 1px solid rgba(74, 158, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(74, 158, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-section {
+            padding: 8px 16px;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 16px;
+        }
+
+        .nav-list { padding: 8px; }
+
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .nav-item:hover { background: var(--bg-hover); }
+        .nav-item.active {
+            background: var(--bg-active);
+            border-left: 3px solid var(--neon-cyan);
+        }
+
+        .nav-icon { font-size: 16px; }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid rgba(74, 158, 255, 0.1);
+            margin-top: auto;
+        }
+
+        .sidebar-profile {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+        }
+
+        .profile-info { margin-left: 12px; }
+        .profile-name { font-size: 13px; font-weight: 600; }
+        .profile-role { font-size: 11px; color: var(--text-muted); }
+
+        /* ===== 主内容区 ===== */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            height: 56px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid rgba(74, 158, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .header-title { font-size: 16px; font-weight: 600; }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--neon-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        /* ===== KPI 卡片 ===== */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(74, 158, 255, 0.1);
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .kpi-trend {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .kpi-trend.up { color: var(--neon-green); }
+        .kpi-trend.down { color: var(--error); }
+
+        /* ===== 内容卡片 ===== */
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(74, 158, 255, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* ===== Bot 状态卡片 ===== */
+        .bot-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .bot-card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid rgba(74, 158, 255, 0.1);
+        }
+
+        .bot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .bot-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .bot-status {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .bot-status.online {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .bot-status.offline {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--error);
+        }
+
+        .bot-model {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .bot-stats {
+            display: flex;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .bot-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+
+        .btn-primary {
+            background: var(--neon-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3a8eff;
+        }
+
+        .btn-secondary {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-active);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        /* ===== 表格样式 ===== */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(74, 158, 255, 0.1);
+        }
+
+        .table th {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .table td {
+            font-size: 13px;
+        }
+
+        .table tr:hover {
+            background: var(--bg-hover);
+        }
+
+        .status-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .status-badge.pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .status-badge.in_progress { background: rgba(74, 158, 255, 0.2); color: var(--neon-blue); }
+        .status-badge.completed { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .status-badge.failed { background: rgba(239, 68, 68, 0.2); color: var(--error); }
+
+        /* ===== 失败模式卡片 ===== */
+        .failure-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .failure-card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .failure-count {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--error);
+            margin-bottom: 8px;
+        }
+
+        .failure-mode {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .failure-trend {
+            font-size: 11px;
+        }
+
+        .failure-trend.down { color: var(--success); }
+        .failure-trend.up { color: var(--error); }
+
+        /* ===== Toast 通知 ===== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            background: var(--bg-card);
+            border: 1px solid rgba(74, 158, 255, 0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--error); }
+        .toast.warning { border-color: var(--warning); }
+
+        /* ===== 模态框 ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(74, 158, 255, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        /* ===== 加载状态 ===== */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(74, 158, 255, 0.3);
+            border-top-color: var(--neon-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-hover) 50%, var(--bg-card) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">🦞 PHOENIX CORE</div>
+            </div>
+
+            <div class="nav-section">主菜单</div>
+            <div class="nav-list">
+                <div class="nav-item active" onclick="navigateTo('dashboard')">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('bots')">
+                    <span class="nav-icon">🤖</span>
+                    <span>Bot 管理</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('skills')">
+                    <span class="nav-icon">📚</span>
+                    <span>技能库</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('tasks')">
+                    <span class="nav-icon">📋</span>
+                    <span>任务队列</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('memory')">
+                    <span class="nav-icon">🧠</span>
+                    <span>记忆中心</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('analytics')">
+                    <span class="nav-icon">📈</span>
+                    <span>数据分析</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('settings')">
+                    <span class="nav-icon">⚙️</span>
+                    <span>系统设置</span>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="avatar">S</div>
+                    <div class="profile-info">
+                        <div class="profile-name">Super Admin</div>
+                        <div class="profile-role">系统管理员</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main">
+            <header class="header">
+                <div class="header-title" id="pageTitle">Dashboard</div>
+                <div class="header-right">
+                    <div class="status-indicator">
+                        <span class="status-dot" id="statusDot"></span>
+                        <span id="statusText">已连接</span>
+                    </div>
+                    <button class="btn btn-secondary" onclick="refreshData()">刷新</button>
+                </div>
+            </header>
+
+            <div class="content" id="content">
+                <!-- Dashboard 首页 -->
+                <div id="page-dashboard">
+                    <!-- KPI 卡片 -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-label">总任务</div>
+                            <div class="kpi-value" id="kpiTotalTasks">-</div>
+                            <div class="kpi-trend up" id="kpiTasksTrend">--</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">待处理</div>
+                            <div class="kpi-value" id="kpiPending">-</div>
+                            <div class="kpi-trend" id="kpiPendingTrend">--</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">活跃技能</div>
+                            <div class="kpi-value" id="kpiSkills">-</div>
+                            <div class="kpi-trend up" id="kpiSkillsTrend">--</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">成功率</div>
+                            <div class="kpi-value" id="kpiSuccessRate">-</div>
+                            <div class="kpi-trend up" id="kpiSuccessRateTrend">--</div>
+                        </div>
+                    </div>
+
+                    <!-- Bot 状态概览 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Bot 状态概览</div>
+                            <button class="btn btn-primary btn-sm" onclick="navigateTo('bots')">查看全部</button>
+                        </div>
+                        <div class="bot-grid" id="botGrid">
+                            <!-- 由 JS 动态渲染 -->
+                        </div>
+                    </div>
+
+                    <!-- 失败模式分析 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">失败模式分析</div>
+                        </div>
+                        <div class="failure-grid" id="failureGrid">
+                            <!-- 由 JS 动态渲染 -->
+                        </div>
+                    </div>
+
+                    <!-- 最近任务 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">最近任务</div>
+                            <button class="btn btn-primary btn-sm" onclick="navigateTo('tasks')">查看全部</button>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>标题</th>
+                                    <th>分配给</th>
+                                    <th>优先级</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentTasksBody">
+                                <!-- 由 JS 动态渲染 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Bot 管理页面 -->
+                <div id="page-bots" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Bot 列表</div>
+                            <button class="btn btn-primary" onclick="startAllBots()">全部启动</button>
+                        </div>
+                        <div class="bot-grid" id="botsPageGrid">
+                            <!-- 由 JS 动态渲染 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 任务队列页面 -->
+                <div id="page-tasks" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">任务队列</div>
+                            <button class="btn btn-primary" onclick="openTaskModal()">新建任务</button>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>标题</th>
+                                    <th>描述</th>
+                                    <th>分配给</th>
+                                    <th>优先级</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tasksBody">
+                                <!-- 由 JS 动态渲染 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 技能库页面 -->
+                <div id="page-skills" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">技能列表</div>
+                        </div>
+                        <div id="skillsList">
+                            <!-- 由 JS 动态渲染 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 记忆中心页面 -->
+                <div id="page-memory" style="display: none;">
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-label">共享记忆</div>
+                            <div class="kpi-value" id="memoryShared">-</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">私有记忆</div>
+                            <div class="kpi-value" id="memoryPrivate">-</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">会话总数</div>
+                            <div class="kpi-value" id="memorySessions">-</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">共享记忆浏览</div>
+                        </div>
+                        <div id="sharedMemoryContent">
+                            <!-- 由 JS 动态渲染 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 数据分析页面 -->
+                <div id="page-analytics" style="display: none;">
+                    <div class="kpi-grid" style="margin-bottom: 24px;">
+                        <div class="kpi-card">
+                            <div class="kpi-label">总任务数</div>
+                            <div class="kpi-value" id="analyticsTotalTasks">0</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">完成率</div>
+                            <div class="kpi-value" id="analyticsCompletionRate">0%</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Bot 活跃度</div>
+                            <div class="kpi-value" id="analyticsBotActivity">0%</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">任务状态分布</div>
+                        </div>
+                        <div style="height: 300px; display: flex; justify-content: center;">
+                            <canvas id="taskStatusChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Bot 任务量分布</div>
+                        </div>
+                        <div style="height: 300px;">
+                            <canvas id="botTaskChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 系统设置页面 -->
+                <div id="page-settings" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">系统配置</div>
+                            <button class="btn btn-primary" onclick="validateConfig()">验证配置</button>
+                        </div>
+                        <div id="configContent">
+                            <!-- 由 JS 动态渲染 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 新建任务模态框 -->
+    <div class="modal-overlay" id="taskModal" style="display: none;">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">新建任务</h3>
+                <button class="modal-close" onclick="closeTaskModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-size: 13px;">任务标题</label>
+                    <input type="text" class="form-input" id="taskTitleInput" placeholder="请输入任务标题"
+                           style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);"/>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-size: 13px;">描述</label>
+                    <textarea class="form-input" id="taskDescInput" placeholder="任务描述（可选）" rows="3"
+                              style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary); resize: vertical;"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-size: 13px;">分配给</label>
+                    <select class="form-select" id="taskBotSelect"
+                            style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);">
+                        <option value="编导">🎬 编导</option>
+                        <option value="剪辑">✂️ 剪辑</option>
+                        <option value="美工">🎨 美工</option>
+                        <option value="场控">🎮 场控</option>
+                        <option value="客服">💬 客服</option>
+                        <option value="运营">📊 运营</option>
+                        <option value="渠道">📡 渠道</option>
+                        <option value="小小谦">🤖 小小谦</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-size: 13px;">优先级</label>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-sm btn-secondary priority-btn" data-priority="low" onclick="selectPriority(this)">低</button>
+                        <button class="btn btn-sm btn-primary priority-btn" data-priority="normal" onclick="selectPriority(this)">普通</button>
+                        <button class="btn btn-sm btn-secondary priority-btn" data-priority="high" onclick="selectPriority(this)" style="color: #f59e0b;">高</button>
+                        <button class="btn btn-sm btn-secondary priority-btn" data-priority="critical" onclick="selectPriority(this)" style="color: #ef4444;">紧急</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding-top: 16px;">
+                <button class="btn btn-secondary" onclick="closeTaskModal()">取消</button>
+                <button class="btn btn-primary" onclick="createTask()">创建任务</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 任务详情模态框 -->
+    <div class="modal-overlay" id="taskDetailModal" style="display: none;">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title">任务详情</h3>
+                <button class="modal-close" onclick="closeTaskDetailModal()">×</button>
+            </div>
+            <div class="modal-body" id="taskDetailContent">
+                <!-- 由 JS 动态渲染 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeTaskDetailModal()">关闭</button>
+                <button class="btn btn-danger" onclick="deleteCurrentTask()">删除任务</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 技能详情模态框 -->
+    <div class="modal-overlay" id="skillDetailModal" style="display: none;">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 class="modal-title">技能详情</h3>
+                <button class="modal-close" onclick="closeSkillDetailModal()">×</button>
+            </div>
+            <div class="modal-body" id="skillDetailContent">
+                <!-- 由 JS 动态渲染 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSkillDetailModal()">关闭</button>
+                <button class="btn btn-secondary" onclick="editCurrentSkill()">编辑技能</button>
+                <button class="btn btn-primary" onclick="optimizeCurrentSkill()">优化技能</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑技能模态框 -->
+    <div class="modal-overlay" id="skillEditModal" style="display: none;">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 class="modal-title">编辑技能</h3>
+                <button class="modal-close" onclick="closeSkillEditModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px;">
+                    <label class="form-label">技能 ID</label>
+                    <input type="text" class="form-input" id="editSkillId" readonly style="background: var(--bg-secondary); color: var(--text-muted);">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label class="form-label">技能名称</label>
+                    <input type="text" class="form-input" id="editSkillName" placeholder="输入技能名称">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label class="form-label">技能描述</label>
+                    <textarea class="form-input" id="editSkillDescription" rows="4" placeholder="输入技能描述"></textarea>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label class="form-label">技能内容</label>
+                    <textarea class="form-input" id="editSkillContent" rows="8" style="font-family: monospace;" placeholder="输入技能内容 (Markdown 格式)"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSkillEditModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveSkillChanges()">保存更改</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 通知 -->
+    <div class="toast" id="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        // ===== API 配置 =====
+        const API_BASE = '';
+
+        // ===== 状态管理 =====
+        let state = {
+            currentPage: 'dashboard',
+            stats: null,
+            bots: [],
+            tasks: [],
+            skills: [],
+            memory: null,
+            config: null,
+            ws: null
+        };
+
+        // ===== 初始化 =====
+        async function init() {
+            setupWebSocket();
+            await loadStats();
+            await loadBots();
+            await loadTasks();
+            await loadSkills();
+            renderDashboard();
+            showToast('已连接到 Phoenix Core', 'success');
+        }
+
+        // ===== WebSocket 连接 =====
+        function setupWebSocket() {
+            const wsUrl = `ws://${window.location.host}/ws`;
+            state.ws = new WebSocket(wsUrl);
+
+            state.ws.onopen = () => {
+                console.log('WebSocket connected');
+                document.getElementById('statusDot').style.background = 'var(--neon-green)';
+                document.getElementById('statusText').textContent = '已连接';
+            };
+
+            state.ws.onclose = () => {
+                console.log('WebSocket disconnected');
+                document.getElementById('statusDot').style.background = 'var(--error)';
+                document.getElementById('statusText').textContent = '已断开';
+                // 3 秒后重连
+                setTimeout(setupWebSocket, 3000);
+            };
+
+            state.ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+        }
+
+        function handleWebSocketMessage(data) {
+            switch(data.type) {
+                case 'status_update':
+                    if (state.currentPage === 'dashboard') {
+                        updateStats(data.bots, data.task_stats);
+                    }
+                    break;
+                case 'task_created':
+                    showToast(`新任务创建：${data.title}`, 'success');
+                    loadTasks();
+                    break;
+                case 'skill_installed':
+                    showToast(`技能已安装：${data.skill_id}`, 'success');
+                    loadSkills();
+                    break;
+            }
+        }
+
+        // ===== API 调用 =====
+        async function api(url) {
+            const res = await fetch(API_BASE + url);
+            return res.json();
+        }
+
+        async function loadStats() {
+            try {
+                state.stats = await api('/api/stats');
+            } catch (e) {
+                console.error('加载统计失败:', e);
+            }
+        }
+
+        async function loadBots() {
+            try {
+                const res = await api('/api/bots');
+                state.bots = res.bots || [];
+            } catch (e) {
+                console.error('加载 Bot 失败:', e);
+            }
+        }
+
+        async function loadTasks() {
+            try {
+                const res = await api('/api/tasks');
+                state.tasks = res.tasks || [];
+            } catch (e) {
+                console.error('加载任务失败:', e);
+            }
+        }
+
+        async function loadSkills() {
+            try {
+                const res = await api('/api/skills');
+                state.skills = res.available || [];
+                // 保存已安装技能列表供参考
+                if (!state.stats) state.stats = {};
+                if (!state.stats.skills) state.stats.skills = {};
+                state.stats.skills.installed_list = res.installed || [];
+            } catch (e) {
+                console.error('加载技能失败:', e);
+            }
+        }
+
+        async function loadMemory() {
+            try {
+                state.memory = await api('/api/memory/stats');
+            } catch (e) {
+                console.error('加载记忆失败:', e);
+            }
+        }
+
+        async function loadConfig() {
+            try {
+                state.config = await api('/api/config');
+            } catch (e) {
+                console.error('加载配置失败:', e);
+            }
+        }
+
+        // ===== 页面导航 =====
+        function navigateTo(page) {
+            // 更新导航状态
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            // 隐藏所有页面
+            document.querySelectorAll('[id^="page-"]').forEach(page => {
+                page.style.display = 'none';
+            });
+
+            // 显示目标页面
+            document.getElementById(`page-${page}`).style.display = 'block';
+            document.getElementById('pageTitle').textContent = getPageTitle(page);
+
+            state.currentPage = page;
+
+            // 加载页面数据
+            switch(page) {
+                case 'dashboard':
+                    renderDashboard();
+                    break;
+                case 'bots':
+                    renderBotsPage();
+                    break;
+                case 'tasks':
+                    renderTasksPage();
+                    break;
+                case 'skills':
+                    renderSkillsPage();
+                    break;
+                case 'memory':
+                    renderMemoryPage();
+                    break;
+                case 'analytics':
+                    renderAnalyticsPage();
+                    break;
+                case 'settings':
+                    renderSettingsPage();
+                    break;
+            }
+        }
+
+        function getPageTitle(page) {
+            const titles = {
+                'dashboard': 'Dashboard',
+                'bots': 'Bot 管理',
+                'skills': '技能库',
+                'tasks': '任务队列',
+                'memory': '记忆中心',
+                'analytics': '数据分析',
+                'settings': '系统设置'
+            };
+            return titles[page] || page;
+        }
+
+        // ===== 渲染 Dashboard =====
+        function renderDashboard() {
+            if (!state.stats) return;
+
+            // KPI 卡片
+            document.getElementById('kpiTotalTasks').textContent = state.stats.tasks?.total || 0;
+            document.getElementById('kpiPending').textContent = state.stats.tasks?.pending || 0;
+            document.getElementById('kpiSkills').textContent = state.stats.skills?.installed || 0;
+            document.getElementById('kpiSuccessRate').textContent = (state.stats.skills?.success_rate * 100 || 0).toFixed(0) + '%';
+
+            // Bot 状态概览
+            const botGrid = document.getElementById('botGrid');
+            botGrid.innerHTML = state.bots.map(bot => `
+                <div class="bot-card">
+                    <div class="bot-header">
+                        <span class="bot-name">${getBotIcon(bot.name)} ${bot.name}</span>
+                        <span class="bot-status ${bot.status}">${bot.status === 'online' ? '●' : '○'} ${bot.status}</span>
+                    </div>
+                    <div class="bot-model">${bot.model}</div>
+                    <div class="bot-stats">
+                        <span>记忆：${bot.memory_entries || 0}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // 失败模式分析
+            const failureGrid = document.getElementById('failureGrid');
+            if (state.stats.failure_modes) {
+                failureGrid.innerHTML = state.stats.failure_modes.map(fm => `
+                    <div class="failure-card">
+                        <div class="failure-count">${fm.count}</div>
+                        <div class="failure-mode">${fm.mode}</div>
+                        <div class="failure-trend ${fm.trend < 0 ? 'down' : 'up'}">
+                            ${fm.trend < 0 ? '↓' : '→'} ${Math.abs(fm.trend)}%
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // 最近任务
+            const recentTasks = state.tasks.slice(0, 5);
+            const tbody = document.getElementById('recentTasksBody');
+            tbody.innerHTML = recentTasks.map(task => `
+                <tr>
+                    <td>#${task.id?.slice(-6) || 'N/A'}</td>
+                    <td>${task.title || '未命名任务'}</td>
+                    <td>${task.assigned_to || '未分配'}</td>
+                    <td>${getPriorityBadge(task.priority)}</td>
+                    <td><span class="status-badge ${task.status}">${task.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // ===== 渲染 Bot 页面 =====
+        function renderBotsPage() {
+            const grid = document.getElementById('botsPageGrid');
+            grid.innerHTML = state.bots.map(bot => `
+                <div class="bot-card">
+                    <div class="bot-header">
+                        <span class="bot-name">${getBotIcon(bot.name)} ${bot.name}</span>
+                        <span class="bot-status ${bot.status}">${bot.status === 'online' ? '●' : '○'} ${bot.status}</span>
+                    </div>
+                    <div class="bot-model">${bot.model}</div>
+                    <div class="bot-stats">
+                        <span>记忆：${bot.memory_entries || 0}</span>
+                    </div>
+                    <div class="bot-actions">
+                        ${bot.status === 'online' ? `
+                            <button class="btn btn-sm btn-secondary" onclick="botAction('stop', '${bot.name}')">停止</button>
+                            <button class="btn btn-sm btn-secondary" onclick="botAction('restart', '${bot.name}')">重启</button>
+                        ` : `
+                            <button class="btn btn-sm btn-success" onclick="botAction('start', '${bot.name}')">启动</button>
+                        `}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ===== 渲染任务页面 =====
+        function renderTasksPage() {
+            const tbody = document.getElementById('tasksBody');
+            tbody.innerHTML = state.tasks.map(task => `
+                <tr>
+                    <td>#${task.id?.slice(-6) || 'N/A'}</td>
+                    <td>${task.title || '未命名'}</td>
+                    <td>${task.description?.slice(0, 30) || ''}...</td>
+                    <td>${task.assigned_to || '未分配'}</td>
+                    <td>${getPriorityBadge(task.priority)}</td>
+                    <td><span class="status-badge ${task.status}">${task.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="viewTask('${task.id}')">查看</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteTask('${task.id}')" style="margin-left: 4px;">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 快速删除任务函数
+        async function deleteTask(id) {
+            if (!confirm('确定要删除这个任务吗？')) return;
+            try {
+                const res = await fetch(API_BASE + `/api/tasks/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showToast('任务已删除', 'success');
+                    await loadTasks();
+                    renderTasksPage();
+                } else {
+                    showToast(`删除失败：${result.error || '未知错误'}`, 'error');
+                }
+            } catch (e) {
+                showToast(`删除失败：${e.message}`, 'error');
+            }
+        }
+
+        // ===== 渲染技能页面 =====
+        function renderSkillsPage() {
+            const list = document.getElementById('skillsList');
+            // state.skills 是从 /api/skills 返回的 available 数组
+            // 已安装技能在 installed 数组中
+            const installedSet = new Set(state.stats?.skills?.installed_list || []);
+
+            if (state.skills && state.skills.length > 0) {
+                list.innerHTML = state.skills.map(skill => `
+                    <div class="card" style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">${skill.name || skill.id || '未命名技能'}</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">${skill.description || '无描述'}</div>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-secondary" onclick="viewSkill('${skill.id}')">查看</button>
+                                ${installedSet.has(skill.id) ?
+                                    '<button class="btn btn-sm btn-success" disabled>已安装</button>' :
+                                    '<button class="btn btn-sm btn-primary" onclick="installSkill(\'' + skill.id + '\')">安装</button>'
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                // 显示已安装技能（当 skill_marketplace 返回空时）
+                const installedSkills = state.stats?.skills?.installed_list || [];
+                if (installedSkills.length > 0) {
+                    list.innerHTML = installedSkills.map(skillId => `
+                        <div class="card" style="margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 600; margin-bottom: 4px;">📦 ${skillId}</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">已安装技能</div>
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-secondary" onclick="viewSkill('${skillId}')">查看</button>
+                                    <button class="btn btn-sm btn-danger" onclick="uninstallSkill('${skillId}')">卸载</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">暂无技能</div>';
+                }
+            }
+        }
+
+        // ===== 渲染记忆页面 =====
+        async function renderMemoryPage() {
+            await loadMemory();
+            if (!state.memory) return;
+
+            document.getElementById('memoryShared').textContent = state.memory.memory?.shared_entries || 0;
+            document.getElementById('memoryPrivate').textContent = state.memory.memory?.private_entries || 0;
+            document.getElementById('memorySessions').textContent = state.memory.sessions?.total_sessions || 0;
+        }
+
+        // ===== 渲染设置页面 =====
+        async function renderSettingsPage() {
+            await loadConfig();
+            if (!state.config) return;
+
+            const content = document.getElementById('configContent');
+            content.innerHTML = Object.entries(state.config.config || {}).map(([key, value]) => `
+                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(74, 158, 255, 0.1);">
+                    <span style="font-weight: 600;">${key}</span>
+                    <span style="color: var(--text-muted); font-family: monospace;">${value}</span>
+                </div>
+            `).join('');
+        }
+
+        // ===== Bot 操作 =====
+        async function botAction(action, botName) {
+            try {
+                await fetch(API_BASE + '/api/bots/action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, bot_name: botName })
+                });
+                showToast(`已${getActionText(action)} ${botName}`, 'success');
+                await loadBots();
+                renderBotsPage();
+            } catch (e) {
+                showToast(`操作失败：${e.message}`, 'error');
+            }
+        }
+
+        async function startAllBots() {
+            await botAction('start', null);
+        }
+
+        function getActionText(action) {
+            const texts = { start: '启动', stop: '停止', restart: '重启' };
+            return texts[action] || action;
+        }
+
+        // ===== 辅助函数 =====
+        function getBotIcon(name) {
+            const icons = {
+                '编导': '🎬', '剪辑': '✂️', '美工': '🎨',
+                '场控': '🎮', '客服': '💬', '运营': '📊',
+                '渠道': '📡', '小小谦': '🤖'
+            };
+            return icons[name] || '🤖';
+        }
+
+        function getPriorityBadge(priority) {
+            const colors = {
+                'critical': 'style="color: #ef4444;"',
+                'high': 'style="color: #f59e0b;"',
+                'normal': 'style="color: #4a9eff;"',
+                'low': 'style="color: #888;"'
+            };
+            const p = priority || 'normal';
+            return `<span ${colors[p] || colors['normal']}>${p}</span>`;
+        }
+
+        function updateStats(bots, taskStats) {
+            state.bots = Object.values(bots);
+            if (state.currentPage === 'dashboard') {
+                renderDashboard();
+            } else if (state.currentPage === 'bots') {
+                renderBotsPage();
+            }
+        }
+
+        async function refreshData() {
+            await loadStats();
+            await loadBots();
+            await loadTasks();
+            await loadSkills();
+            if (state.currentPage === 'dashboard') renderDashboard();
+            showToast('数据已刷新', 'success');
+        }
+
+        // ===== Toast 通知 =====
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.className = 'toast show ' + type;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // ===== 技能操作 =====
+        async function installSkill(skillId) {
+            try {
+                const res = await fetch(API_BASE + `/api/skills/${skillId}/install`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showToast(`技能 ${skillId} 已安装`, 'success');
+                    await loadSkills();
+                    renderSkillsPage();
+                } else {
+                    showToast(`安装失败：${result.error || '未知错误'}`, 'error');
+                }
+            } catch (e) {
+                showToast(`安装失败：${e.message}`, 'error');
+            }
+        }
+
+        async function uninstallSkill(skillId) {
+            if (!confirm(`确定要卸载技能 ${skillId} 吗？`)) return;
+
+            try {
+                const res = await fetch(API_BASE + `/api/skills/${skillId}`, {
+                    method: 'DELETE'
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showToast(`技能 ${skillId} 已卸载`, 'success');
+                    await loadSkills();
+                    renderSkillsPage();
+                } else {
+                    showToast(`卸载失败：${result.error || '未知错误'}`, 'error');
+                }
+            } catch (e) {
+                showToast(`卸载失败：${e.message}`, 'error');
+            }
+        }
+
+        function viewSkill(id) { showToast('技能详情待实现', 'warning'); }
+
+        // ===== 任务操作 =====
+        let selectedPriority = 'normal';
+
+        function openTaskModal() {
+            selectedPriority = 'normal';
+            document.getElementById('taskTitleInput').value = '';
+            document.getElementById('taskDescInput').value = '';
+            document.getElementById('taskBotSelect').value = '编导';
+            // 重置优先级按钮状态
+            document.querySelectorAll('.priority-btn').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+            });
+            document.querySelector('.priority-btn[data-priority="normal"]').classList.remove('btn-secondary');
+            document.querySelector('.priority-btn[data-priority="normal"]').classList.add('btn-primary');
+            document.getElementById('taskModal').classList.add('active');
+        }
+
+        function closeTaskModal() {
+            document.getElementById('taskModal').classList.remove('active');
+        }
+
+        function selectPriority(btn) {
+            selectedPriority = btn.dataset.priority;
+            document.querySelectorAll('.priority-btn').forEach(b => {
+                b.classList.remove('btn-primary');
+                b.classList.add('btn-secondary');
+            });
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-primary');
+        }
+
+        async function createTask() {
+            const title = document.getElementById('taskTitleInput').value.trim();
+            const description = document.getElementById('taskDescInput').value.trim();
+            const assigned_to = document.getElementById('taskBotSelect').value;
+
+            if (!title) {
+                showToast('请输入任务标题', 'warning');
+                return;
+            }
+
+            try {
+                const res = await fetch(API_BASE + '/api/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, description, assigned_to, priority: selectedPriority })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showToast('任务创建成功', 'success');
+                    closeTaskModal();
+                    await loadTasks();
+                    renderTasksPage();
+                } else {
+                    showToast(`创建失败：${result.detail || '未知错误'}`, 'error');
+                }
+            } catch (e) {
+                showToast(`创建失败：${e.message}`, 'error');
+            }
+        }
+
+        // ===== 任务详情 =====
+        let currentTaskId = null;
+
+        async function viewTask(id) {
+            currentTaskId = id;
+            try {
+                const res = await fetch(API_BASE + '/api/tasks');
+                const data = await res.json();
+                const task = (data.tasks || []).find(t => t.id === id);
+
+                if (!task) {
+                    showToast('任务未找到', 'error');
+                    return;
+                }
+
+                const content = document.getElementById('taskDetailContent');
+                content.innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">任务 ID</div>
+                        <div style="font-family: monospace; color: var(--neon-blue);">${task.id}</div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">标题</div>
+                        <div style="font-size: 16px; font-weight: 600;">${task.title || '未命名'}</div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">描述</div>
+                        <div style="color: var(--text-secondary);">${task.description || '无描述'}</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">分配给</div>
+                            <div>${getBotIcon(task.assigned_to)} ${task.assigned_to || '未分配'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">优先级</div>
+                            <div style="color: ${getPriorityColor(task.priority)}">${task.priority || 'normal'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">状态</div>
+                            <span class="status-badge ${task.status}">${task.status || 'pending'}</span>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">创建时间</div>
+                            <div style="font-size: 12px;">${formatTimestamp(task.created_at)}</div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('taskDetailModal').classList.add('active');
+            } catch (e) {
+                showToast(`加载失败：${e.message}`, 'error');
+            }
+        }
+
+        function closeTaskDetailModal() {
+            document.getElementById('taskDetailModal').classList.remove('active');
+        }
+
+        async function deleteCurrentTask() {
+            if (!currentTaskId || !confirm('确定要删除这个任务吗？')) return;
+
+            try {
+                const res = await fetch(API_BASE + `/api/tasks/${currentTaskId}`, {
+                    method: 'DELETE'
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    showToast('任务已删除', 'success');
+                    closeTaskDetailModal();
+                    await loadTasks();
+                    renderTasksPage();
+                } else {
+                    showToast(`删除失败：${result.error || '未知错误'}`, 'error');
+                }
+            } catch (e) {
+                showToast(`删除失败：${e.message}`, 'error');
+            }
+        }
+
+        function getPriorityColor(priority) {
+            const colors = { 'critical': '#ef4444', 'high': '#f59e0b', 'normal': '#4a9eff', 'low': '#888' };
+            return colors[priority] || colors['normal'];
+        }
+
+        function formatTimestamp(ts) {
+            if (!ts) return '未知';
+            try {
+                const date = new Date(ts);
+                return date.toLocaleString('zh-CN');
+            } catch {
+                return ts;
+            }
+        }
+
+        // ===== 技能详情 =====
+        let currentSkillId = null;
+
+        async function viewSkill(id) {
+            currentSkillId = id;
+            try {
+                // 获取技能版本历史
+                const res = await fetch(API_BASE + `/api/skills/${id}/versions`);
+                const data = await res.json();
+
+                const content = document.getElementById('skillDetailContent');
+
+                if (data.versions && data.versions.length > 0) {
+                    // 有版本数据的技能
+                    renderSkillVersions(content, data);
+                } else {
+                    // 无版本数据，显示基本信息
+                    renderSkillBasicInfo(content, id);
+                }
+                document.getElementById('skillDetailModal').classList.add('active');
+            } catch (e) {
+                showToast(`加载失败：${e.message}`, 'error');
+            }
+        }
+
+        function renderSkillVersions(content, data) {
+            const versions = data.versions;
+            const currentVersion = versions.find(v => !v.deprecated) || versions[versions.length - 1];
+
+            content.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">技能名称</div>
+                    <div style="font-size: 16px; font-weight: 600;">📦 ${data.skill_name || id}</div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">当前版本</div>
+                    <div style="font-size: 14px; color: var(--neon-green);">${currentVersion?.version || 'v1'}</div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">版本历史</div>
+                    <div style="max-height: 200px; overflow-y: auto;">
+                        ${versions.map(v => `
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(74, 158, 255, 0.1);">
+                                <div>
+                                    <div style="font-size: 13px;">${v.version}</div>
+                                    <div style="font-size: 11px; color: var(--text-muted);">${new Date(v.created_at).toLocaleString('zh-CN')}</div>
+                                </div>
+                                <div>
+                                    ${v.deprecated ?
+                                        '<span style="font-size: 11px; color: var(--text-muted);">已弃用</span>' :
+                                        '<span style="font-size: 11px; color: var(--neon-green);">当前版本</span>'
+                                    }
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">总版本数</div>
+                        <div style="font-size: 18px; font-weight: 600;">${data.total_versions || versions.length}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">成功率</div>
+                        <div style="font-size: 18px; font-weight: 600; color: var(--neon-green);">${(currentVersion?.success_rate * 100 || 0).toFixed(0)}%</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSkillBasicInfo(content, id) {
+            content.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">技能 ID</div>
+                    <div style="font-family: monospace; color: var(--neon-blue);">${id}</div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">状态</div>
+                    <div style="color: var(--neon-green);">✅ 已安装</div>
+                </div>
+                <div style="margin-bottom: 20px; padding: 16px; background: var(--bg-secondary); border-radius: 8px;">
+                    <div style="font-size: 14px; color: var(--text-secondary);">
+                        该技能已安装到工作区，但尚未进行版本追踪。
+                        <br><br>
+                        技能版本追踪需要通过 skill_evolution 模块创建，当技能被优化时会自动建立版本历史。
+                    </div>
+                </div>
+                <div style="text-align: center; padding: 20px; color: var(--text-muted);">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📦</div>
+                    <div>暂无版本数据</div>
+                </div>
+            `;
+        }
+
+        function closeSkillDetailModal() {
+            document.getElementById('skillDetailModal').classList.remove('active');
+        }
+
+        async function optimizeCurrentSkill() {
+            if (!currentSkillId) return;
+
+            if (!confirm('确定要优化这个技能吗？AI 将分析并创建新版本。')) return;
+
+            try {
+                const res = await fetch(API_BASE + `/api/skills/${currentSkillId}/optimize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: 'Manual optimization' })
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    showToast(`技能已优化到 ${result.new_version}`, 'success');
+                    closeSkillDetailModal();
+                    await loadSkills();
+                } else {
+                    showToast(`优化失败：${result.error || '未知错误'}`, 'error');
+                }
+            } catch (e) {
+                showToast(`优化失败：${e.message}`, 'error');
+            }
+        }
+
+        // ===== 技能编辑功能 =====
+        async function editCurrentSkill() {
+            if (!currentSkillId) return;
+
+            try {
+                // 获取技能详情
+                const res = await fetch(API_BASE + `/api/skills/${currentSkillId}`);
+                const skill = await res.json();
+
+                // 填充表单
+                document.getElementById('editSkillId').value = currentSkillId;
+                document.getElementById('editSkillName').value = skill.name || '';
+                document.getElementById('editSkillDescription').value = skill.description || '';
+                document.getElementById('editSkillContent').value = skill.content || '';
+
+                document.getElementById('skillEditModal').classList.add('active');
+            } catch (e) {
+                // 如果 API 不存在，使用模拟数据
+                document.getElementById('editSkillId').value = currentSkillId;
+                document.getElementById('editSkillName').value = `Skill: ${currentSkillId}`;
+                document.getElementById('editSkillDescription').value = '技能描述';
+                document.getElementById('editSkillContent').value = '# 技能内容\n\n在此编辑技能内容...';
+
+                document.getElementById('skillEditModal').classList.add('active');
+            }
+        }
+
+        function closeSkillEditModal() {
+            document.getElementById('skillEditModal').classList.remove('active');
+        }
+
+        async function saveSkillChanges() {
+            if (!currentSkillId) return;
+
+            const name = document.getElementById('editSkillName').value;
+            const description = document.getElementById('editSkillDescription').value;
+            const content = document.getElementById('editSkillContent').value;
+
+            try {
+                const res = await fetch(API_BASE + `/api/skills/${currentSkillId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, description, content })
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    showToast('技能已保存', 'success');
+                    closeSkillEditModal();
+                    closeSkillDetailModal();
+                    await loadSkills();
+                } else {
+                    showToast(`保存失败：${result.error || '未知错误'}`, 'error');
+                }
+            } catch (e) {
+                showToast(`保存失败：${e.message}`, 'error');
+            }
+        }
+
+        // ===== 配置验证 =====
+        async function validateConfig() {
+            try {
+                const res = await fetch(API_BASE + '/api/config/validate', {
+                    method: 'POST'
+                });
+                const result = await res.json();
+                if (result.valid) {
+                    showToast('配置验证通过', 'success');
+                } else {
+                    showToast(`配置问题：${result.message || '请检查配置'}`, 'warning');
+                }
+            } catch (e) {
+                showToast(`验证失败：${e.message}`, 'error');
+            }
+        }
+
+        // ===== 图表管理 =====
+        let taskStatusChartInstance = null;
+        let botTaskChartInstance = null;
+
+        function renderAnalyticsPage() {
+            if (!state.stats) return;
+
+            // 更新 KPI
+            const tasks = state.stats.tasks || {};
+            document.getElementById('analyticsTotalTasks').textContent = tasks.total || 0;
+
+            const completionRate = tasks.total > 0 ?
+                Math.round((tasks.completed || 0) / tasks.total * 100) : 0;
+            document.getElementById('analyticsCompletionRate').textContent = completionRate + '%';
+
+            const activeBots = (state.stats.bots?.details || []).filter(b => b.status === 'online').length;
+            const totalBots = state.stats.bots?.total || state.bots.length || 8;
+            const botActivity = totalBots > 0 ?
+                Math.round(activeBots / totalBots * 100) : 0;
+            document.getElementById('analyticsBotActivity').textContent = botActivity + '%';
+
+            // 构建 by_status 对象（适配后端返回的扁平结构）
+            const byStatus = tasks.by_status && Object.keys(tasks.by_status).length > 0 ?
+                tasks.by_status :
+                {
+                    pending: tasks.pending || 0,
+                    in_progress: tasks.in_progress || 0,
+                    completed: tasks.completed || 0,
+                    failed: tasks.failed || 0
+                };
+
+            // 渲染任务状态饼图
+            renderTaskStatusChart(byStatus);
+
+            // 渲染 Bot 任务量柱状图
+            renderBotTaskChart(tasks.by_bot || {});
+        }
+
+        function renderTaskStatusChart(byStatus) {
+            const ctx = document.getElementById('taskStatusChart').getContext('2d');
+
+            if (taskStatusChartInstance) {
+                taskStatusChartInstance.destroy();
+            }
+
+            const data = {
+                labels: ['待处理', '执行中', '已完成', '失败'],
+                datasets: [{
+                    data: [
+                        byStatus.pending || 0,
+                        byStatus.in_progress || 0,
+                        byStatus.completed || 0,
+                        byStatus.failed || 0
+                    ],
+                    backgroundColor: [
+                        '#f59e0b',
+                        '#4a9eff',
+                        '#10b981',
+                        '#ef4444'
+                    ],
+                    borderWidth: 0
+                }]
+            };
+
+            taskStatusChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#a5b4fc',
+                                padding: 20,
+                                font: { size: 12 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderBotTaskChart(byBot) {
+            const ctx = document.getElementById('botTaskChart').getContext('2d');
+
+            if (botTaskChartInstance) {
+                botTaskChartInstance.destroy();
+            }
+
+            const labels = Object.keys(byBot).map(name => {
+                const icons = { '编导': '🎬', '剪辑': '✂️', '美工': '🎨', '场控': '🎮', '客服': '💬', '运营': '📊', '渠道': '📡', '小小谦': '🤖' };
+                return (icons[name] || '🤖') + ' ' + name;
+            });
+            const data = Object.values(byBot);
+
+            botTaskChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '任务数',
+                        data: data,
+                        backgroundColor: 'rgba(74, 158, 255, 0.6)',
+                        borderColor: '#4a9eff',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(74, 158, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#888'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#a5b4fc'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ===== 启动 =====
+        init();
+    </script>
+</body>
+</html>

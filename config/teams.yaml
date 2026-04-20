@@ -1,0 +1,30 @@
+# 团队分组配置
+# 团队成员可以共享记忆
+teams:
+  管理团队:
+    description: "系统管理和协调"
+    members:
+      - "小小谦"
+    shared_memory: false
+
+  内容团队:
+    description: "直播内容相关"
+    members:
+      - "运营"
+      - "场控"
+      - "编导"
+    shared_memory: true
+
+  制作团队:
+    description: "视频制作相关"
+    members:
+      - "剪辑"
+      - "美工"
+    shared_memory: true
+
+  商务团队:
+    description: "客服、粉丝运营和渠道"
+    members:
+      - "客服"
+      - "渠道"
+    shared_memory: true

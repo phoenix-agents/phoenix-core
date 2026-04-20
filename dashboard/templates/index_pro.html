@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phoenix Core - Neural Dashboard v3.0 Pro</title>
+    <style>
+        /* ===== Phoenix Core v3.0 Pro - 完整专业版 ===== */
+
+        :root {
+            /* 色彩系统 */
+            --bg-primary: #0a0f1f;
+            --bg-secondary: #16162a;
+            --bg-card: #1a1f3f;
+            --bg-hover: #2a2a4a;
+            --bg-active: #3a3a6a;
+
+            /* 霓虹强调色 */
+            --neon-cyan: #00f0ff;
+            --neon-blue: #4a9eff;
+            --neon-purple: #8b5cf6;
+            --neon-green: #00ff88;
+            --neon-pink: #ff00ff;
+
+            /* 状态色 */
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+
+            /* 文字 */
+            --text-primary: #eaeaea;
+            --text-secondary: #a5b4fc;
+            --text-muted: #888;
+
+            /* 尺寸系统 */
+            --sidebar-width: 260px;
+            --sidebar-collapsed-width: 64px;
+            --header-height: 56px;
+
+            /* 间距系统 - 8px 基准 */
+            --spacing-4: 4px;
+            --spacing-8: 8px;
+            --spacing-12: 12px;
+            --spacing-16: 16px;
+            --spacing-20: 20px;
+            --spacing-24: 24px;
+            --spacing-32: 32px;
+
+            /* 圆角系统 */
+            --radius-sm: 4px;
+            --radius-md: 6px;
+            --radius-lg: 8px;
+            --radius-xl: 12px;
+            --radius-2xl: 16px;
+
+            /* 阴影 */
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 20px rgba(0, 240, 255, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            background-image:
+                linear-gradient(rgba(0, 240, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.02) 1px, transparent 1px);
+            background-size: 48px 48px;
+        }
+
+        /* ===== 布局容器 ===== */
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* ===== 侧边栏 ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-secondary);
+            border-right: 1px solid rgba(74, 158, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            transition: width 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: var(--spacing-20);
+            border-bottom: 1px solid rgba(74, 158, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-12);
+        }
+
+        .logo-icon {
+            font-size: 24px;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-toggle {
+            width: 32px;
+            height: 32px;
+            background: rgba(74, 158, 255, 0.1);
+            border: 1px solid rgba(74, 158, 255, 0.2);
+            border-radius: var(--radius-md);
+            color: var(--neon-cyan);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .sidebar-toggle:hover {
+            background: rgba(74, 158, 255, 0.2);
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* 导航区 */
+        .sidebar-nav {
+            padding: var(--spacing-16) var(--spacing-12);
+        }
+
+        .nav-section {
+            margin-bottom: var(--spacing-24);
+        }
+
+        .nav-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--spacing-8) var(--spacing-12);
+            margin-bottom: var(--spacing-8);
+        }
+
+        .nav-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .nav-action {
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-action:hover {
+            color: var(--neon-cyan);
+        }
+
+        /* 导航项 */
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-12) var(--spacing-16);
+            margin-bottom: var(--spacing-4);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .nav-item.active {
+            background: var(--bg-active);
+            border-left: 3px solid var(--neon-cyan);
+        }
+
+        .nav-item-icon {
+            font-size: 16px;
+            margin-right: var(--spacing-12);
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-item-content {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .nav-item-title {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .nav-item.active .nav-item-title {
+            color: var(--text-primary);
+        }
+
+        .nav-item-badge {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+            background: rgba(0, 240, 255, 0.15);
+            color: var(--neon-cyan);
+            margin-left: var(--spacing-8);
+        }
+
+        .nav-item-actions {
+            display: flex;
+            gap: var(--spacing-4);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .nav-item:hover .nav-item-actions {
+            opacity: 1;
+        }
+
+        .nav-item-btn {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+        }
+
+        .nav-item-btn.edit {
+            color: var(--neon-blue);
+        }
+
+        .nav-item-btn.edit:hover {
+            background: var(--neon-blue);
+            color: white;
+        }
+
+        .nav-item-btn.delete {
+            color: var(--error);
+        }
+
+        .nav-item-btn.delete:hover {
+            background: var(--error);
+            color: white;
+        }
+
+        /* 侧边栏底部 */
+        .sidebar-footer {
+            padding: var(--spacing-16);
+            border-top: 1px solid rgba(74, 158, 255, 0.1);
+            margin-top: auto;
+        }
+
+        .sidebar-profile {
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-12);
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--radius-xl);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sidebar-profile:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: white;
+        }
+
+        .profile-info {
+            margin-left: var(--spacing-12);
+            flex: 1;
+        }
+
+        .profile-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .profile-role {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* ===== 主内容区 ===== */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 顶部导航栏 */
+        .top-nav {
+            height: var(--header-height);
+            background: var(--bg-secondary);
+            border-bottom: 1px solid rgba(74, 158, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--spacing-24);
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-8);
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb-separator {
+            color: var(--text-muted);
+        }
+
+        .breadcrumb-current {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .top-nav-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-16);
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(74, 158, 255, 0.2);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-8) var(--spacing-16);
+            width: 280px;
+            transition: all 0.2s;
+        }
+
+        .search-box:focus-within {
+            border-color: var(--neon-cyan);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .search-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-size: 13px;
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .notification-btn {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(74, 158, 255, 0.2);
+            border-radius: var(--radius-lg);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .notification-btn:hover {
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            background: var(--error);
+            border-radius: 50%;
+            border: 2px solid var(--bg-secondary);
+        }
+
+        /* 内容滚动区 */
+        .content-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--spacing-32);
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-32);
+        }
+
+        .content-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .content-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: var(--spacing-4);
+        }
+
+        .content-actions {
+            display: flex;
+            gap: var(--spacing-12);
+        }
+
+        /* 按钮系统 */
+        .btn {
+            padding: var(--spacing-12) var(--spacing-20);
+            border-radius: var(--radius-lg);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-8);
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+            color: #0a0f1f;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid rgba(74, 158, 255, 0.3);
+            color: var(--neon-cyan);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--neon-cyan);
+            background: rgba(0, 240, 255, 0.1);
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* KPI 卡片网格 */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--spacing-20);
+            margin-bottom: var(--spacing-32);
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-24);
+            border: 1px solid rgba(0, 240, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg,
+                transparent,
+                var(--neon-cyan),
+                var(--neon-blue),
+                var(--neon-purple),
+                transparent);
+            opacity: 0;
+            transform: scaleX(0.5);
+            transition: all 0.3s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(0, 240, 255, 0.3);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), var(--shadow-glow);
+        }
+
+        .kpi-card:hover::before {
+            opacity: 1;
+            transform: scaleX(1);
+        }
+
+        .kpi-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--spacing-16);
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .kpi-icon-blue {
+            background: rgba(74, 158, 255, 0.15);
+        }
+
+        .kpi-icon-green {
+            background: rgba(16, 185, 129, 0.15);
+        }
+
+        .kpi-icon-purple {
+            background: rgba(139, 92, 246, 0.15);
+        }
+
+        .kpi-icon-orange {
+            background: rgba(245, 158, 11, 0.15);
+        }
+
+        .kpi-trend {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-4);
+            font-size: 12px;
+            padding: var(--spacing-4) var(--spacing-8);
+            border-radius: var(--radius-sm);
+        }
+
+        .kpi-trend.up {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .kpi-trend.down {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+        }
+
+        .kpi-value {
+            font-size: 36px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: var(--spacing-8);
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: var(--spacing-12);
+            padding-top: var(--spacing-12);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* 图表区 */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-20);
+            margin-bottom: var(--spacing-32);
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-24);
+            border: 1px solid rgba(74, 158, 255, 0.15);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-20);
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-12);
+        }
+
+        .chart-title-icon {
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(180deg, var(--neon-cyan), var(--neon-blue));
+            border-radius: 2px;
+        }
+
+        .chart-actions {
+            display: flex;
+            gap: var(--spacing-8);
+        }
+
+        .chart-btn {
+            padding: var(--spacing-8) var(--spacing-12);
+            background: transparent;
+            border: 1px solid rgba(74, 158, 255, 0.2);
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .chart-btn:hover {
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .chart-btn.active {
+            background: rgba(0, 240, 255, 0.1);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        .chart-body {
+            height: 280px;
+            position: relative;
+        }
+
+        /* SVG 图表样式 */
+        .chart-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .chart-line {
+            fill: none;
+            stroke: var(--neon-cyan);
+            stroke-width: 2;
+            filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.5));
+        }
+
+        .chart-area {
+            fill: url(#areaGradient);
+        }
+
+        .chart-dot {
+            fill: var(--bg-card);
+            stroke: var(--neon-cyan);
+            stroke-width: 2;
+            cursor: pointer;
+        }
+
+        .chart-dot:hover {
+            fill: var(--neon-cyan);
+        }
+
+        /* 失败模式 */
+        .failure-section {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-24);
+            border: 1px solid rgba(74, 158, 255, 0.15);
+            margin-bottom: var(--spacing-20);
+        }
+
+        .failure-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-16);
+            margin-top: var(--spacing-20);
+        }
+
+        .failure-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: var(--spacing-20);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+        }
+
+        .failure-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: scale(1.03);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .failure-name {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-12);
+        }
+
+        .failure-count {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--error);
+            text-shadow: 0 0 30px rgba(239, 68, 68, 0.4);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .failure-percentage {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: var(--spacing-8);
+        }
+
+        .failure-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-4);
+            font-size: 12px;
+            padding: var(--spacing-8) var(--spacing-12);
+            border-radius: var(--radius-md);
+            margin-top: var(--spacing-16);
+        }
+
+        .failure-trend.up {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+        }
+
+        .failure-trend.down {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        /* 技能表格 */
+        .skills-table-section {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-24);
+            border: 1px solid rgba(74, 158, 255, 0.15);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-20);
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .skills-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .skills-table th {
+            text-align: left;
+            padding: var(--spacing-16);
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .skills-table td {
+            padding: var(--spacing-16);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .skills-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .skill-name {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-12);
+        }
+
+        .skill-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .skill-info {
+            flex: 1;
+        }
+
+        .skill-title {
+            font-size: 14px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .skill-category {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .skill-status {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-4);
+            padding: var(--spacing-4) var(--spacing-12);
+            border-radius: var(--radius-xl);
+            font-size: 12px;
+        }
+
+        .skill-status.active {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .skill-status.warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        .skill-rate {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .skill-rate.good { color: var(--success); }
+        .skill-rate.normal { color: var(--warning); }
+        .skill-rate.poor { color: var(--error); }
+
+        /* 状态指示器 */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-4);
+            padding: var(--spacing-4) var(--spacing-12);
+            border-radius: var(--radius-xl);
+            font-size: 12px;
+        }
+
+        .status-badge.online {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-active);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-blue);
+        }
+
+        /* 模态框 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid rgba(74, 158, 255, 0.2);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-24);
+            width: 100%;
+            max-width: 480px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-24);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: 1px solid rgba(74, 158, 255, 0.2);
+            border-radius: var(--radius-md);
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        .modal-body {
+            margin-bottom: var(--spacing-24);
+        }
+
+        .form-group {
+            margin-bottom: var(--spacing-20);
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-8);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: var(--spacing-12) var(--spacing-16);
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(74, 158, 255, 0.2);
+            border-radius: var(--radius-lg);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .form-select {
+            composes: form-input;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: var(--spacing-12);
+            justify-content: flex-end;
+        }
+
+        /* 加载动画 */
+        .skeleton {
+            background: linear-gradient(
+                90deg,
+                var(--bg-card) 0%,
+                var(--bg-hover) 50%,
+                var(--bg-card) 100%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: var(--radius-md);
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* 响应式 */
+        @media (max-width: 1400px) {
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .failure-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar { width: var(--sidebar-collapsed-width); }
+            .sidebar-header { padding: var(--spacing-16); }
+            .logo-text, .nav-title, .nav-item-title, .nav-item-badge, .profile-info { display: none; }
+            .nav-item { justify-content: center; padding: var(--spacing-16); }
+            .nav-item-icon { margin-right: 0; }
+            .nav-item-actions { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            .kpi-grid { grid-template-columns: 1fr; }
+            .charts-section { grid-template-columns: 1fr; }
+            .failure-grid { grid-template-columns: 1fr; }
+            .top-nav { padding: 0 var(--spacing-16); }
+            .search-box { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">🦞</span>
+                    <span class="logo-text">PHOENIX CORE</span>
+                </div>
+                <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+            </div>
+
+            <!-- 导航区 -->
+            <nav class="sidebar-nav">
+                <!-- 主导航 -->
+                <div class="nav-section">
+                    <div class="nav-header">
+                        <span class="nav-title">主菜单</span>
+                    </div>
+                    <div class="nav-item active">
+                        <span class="nav-item-icon">📊</span>
+                        <div class="nav-item-content">
+                            <span class="nav-item-title">Dashboard</span>
+                        </div>
+                        <span class="nav-item-badge">热</span>
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-item-icon">🤖</span>
+                        <div class="nav-item-content">
+                            <span class="nav-item-title">Bot 管理</span>
+                        </div>
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-item-icon">📚</span>
+                        <div class="nav-item-content">
+                            <span class="nav-item-title">技能库</span>
+                        </div>
+                        <span class="nav-item-badge">17</span>
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-item-icon">📋</span>
+                        <div class="nav-item-content">
+                            <span class="nav-item-title">任务队列</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bots -->
+                <div class="nav-section">
+                    <div class="nav-header">
+                        <span class="nav-title">我的 Bots</span>
+                        <span class="nav-action" onclick="openBotModal()">＋</span>
+                    </div>
+                    <div class="nav-item active">
+                        <span class="nav-item-icon">🎬</span>
+                        <div class="nav-item-content">
+                            <span class="nav-item-title">场控</span>
+                        </div>
+                        <div class="nav-item-actions">
+                            <button class="nav-item-btn edit" onclick="event.stopPropagation(); editBot('场控')">✎</button>
+                            <button class="nav-item-btn delete" onclick="event.stopPropagation(); deleteBot('场控')">×</button>
+                        </div>
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-item-icon">💬</span>
+                        <div class="nav-item-content">
+                            <span class="nav-item-title">客服</span>
+                        </div>
+                        <div class="nav-item-actions">
+                            <button class="nav-item-btn edit" onclick="event.stopPropagation(); editBot('客服')">✎</button>
+                            <button class="nav-item-btn delete" onclick="event.stopPropagation(); deleteBot('客服')">×</button>
+                        </div>
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-item-icon">📈</span>
+                        <div class="nav-item-content">
+                            <span class="nav-item-title">运营</span>
+                        </div>
+                        <div class="nav-item-actions">
+                            <button class="nav-item-btn edit" onclick="event.stopPropagation(); editBot('运营')">✎</button>
+                            <button class="nav-item-btn delete" onclick="event.stopPropagation(); deleteBot('运营')">×</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 技能库 -->
+                <div class="nav-section">
+                    <div class="nav-header">
+                        <span class="nav-title">技能库</span>
+                        <span class="nav-action" onclick="openSkillModal()">＋</span>
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-item-icon">🎨</span>
+                        <div class="nav-item-content">
+                            <span class="nav-item-title">UI/UX 设计原则</span>
+                        </div>
+                        <span class="nav-item-badge">v3.0</span>
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-item-icon">📊</span>
+                        <div class="nav-item-content">
+                            <span class="nav-item-title">数据可视化</span>
+                        </div>
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-item-icon">🌃</span>
+                        <div class="nav-item-content">
+                            <span class="nav-item-title">赛博朋克风格</span>
+                        </div>
+                    </div>
+                    <div class="nav-item">
+                        <span class="nav-item-icon">📐</span>
+                        <div class="nav-item-content">
+                            <span class="nav-item-title">CARP 原则</span>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- 底部个人信息 -->
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="avatar">S</div>
+                    <div class="profile-info">
+                        <div class="profile-name">Super Admin</div>
+                        <div class="profile-role">系统管理员</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部导航 -->
+            <nav class="top-nav">
+                <div class="breadcrumb">
+                    <span>Phoenix Core</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-current">Dashboard</span>
+                </div>
+
+                <div class="top-nav-actions">
+                    <div class="search-box">
+                        <span>🔍</span>
+                        <input type="text" placeholder="搜索技能、任务、Bot... (Ctrl+K)" />
+                    </div>
+                    <button class="notification-btn">
+                        🔔
+                        <span class="notification-badge"></span>
+                    </button>
+                    <button class="btn btn-primary" onclick="openTaskModal()">
+                        ＋ 新建任务
+                    </button>
+                </div>
+            </nav>
+
+            <!-- 内容区 -->
+            <div class="content-scroll">
+                <div class="content-header">
+                    <div>
+                        <h1 class="content-title">Dashboard</h1>
+                        <p class="content-subtitle">欢迎回来，这是您的系统概览</p>
+                    </div>
+                    <div class="content-actions">
+                        <button class="btn btn-secondary">📥 导出数据</button>
+                        <button class="btn btn-primary">⚙️ 系统设置</button>
+                    </div>
+                </div>
+
+                <!-- KPI 卡片 -->
+                <section class="kpi-grid" id="kpiGrid">
+                    <div class="kpi-card">
+                        <div class="kpi-card-header">
+                            <div>
+                                <div class="kpi-value">2,847</div>
+                                <div class="kpi-label">总任务数</div>
+                            </div>
+                            <div class="kpi-icon kpi-icon-blue">📋</div>
+                        </div>
+                        <div class="kpi-meta">
+                            <span class="kpi-trend up">↑ 12.5%</span>
+                            <span>较上周</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-card-header">
+                            <div>
+                                <div class="kpi-value">127</div>
+                                <div class="kpi-label">待处理任务</div>
+                            </div>
+                            <div class="kpi-icon kpi-icon-orange">⏳</div>
+                        </div>
+                        <div class="kpi-meta">
+                            <span class="kpi-trend down">↓ 8.2%</span>
+                            <span>积压减少</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-card-header">
+                            <div>
+                                <div class="kpi-value">17</div>
+                                <div class="kpi-label">活跃技能</div>
+                            </div>
+                            <div class="kpi-icon kpi-icon-purple">📚</div>
+                        </div>
+                        <div class="kpi-meta">
+                            <span class="kpi-trend up">↑ 3 新增</span>
+                            <span>34 个版本</span>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-card-header">
+                            <div>
+                                <div class="kpi-value">78.4%</div>
+                                <div class="kpi-label">平均成功率</div>
+                            </div>
+                            <div class="kpi-icon kpi-icon-green">📈</div>
+                        </div>
+                        <div class="kpi-meta">
+                            <span class="kpi-trend up">↑ 2.1%</span>
+                            <span>性能提升</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 图表区 -->
+                <section class="charts-section">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">
+                                <span class="chart-title-icon"></span>
+                                任务评估分数趋势
+                            </div>
+                            <div class="chart-actions">
+                                <button class="chart-btn">7 天</button>
+                                <button class="chart-btn active">30 天</button>
+                                <button class="chart-btn">90 天</button>
+                            </div>
+                        </div>
+                        <div class="chart-body">
+                            <svg class="chart-svg" viewBox="0 0 800 280">
+                                <defs>
+                                    <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#00f0ff;stop-opacity:0.3" />
+                                        <stop offset="100%" style="stop-color:#00f0ff;stop-opacity:0" />
+                                    </linearGradient>
+                                </defs>
+                                <!-- 网格线 -->
+                                <line x1="0" y1="56" x2="800" y2="56" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+                                <line x1="0" y1="112" x2="800" y2="112" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+                                <line x1="0" y1="168" x2="800" y2="168" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+                                <line x1="0" y1="224" x2="800" y2="224" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+                                <!-- 面积图 -->
+                                <path class="chart-area" d="M0,200 Q100,180 200,150 T400,120 T600,100 T800,80 L800,280 L0,280 Z" />
+                                <!-- 折线图 -->
+                                <path class="chart-line" d="M0,200 Q100,180 200,150 T400,120 T600,100 T800,80" />
+                                <!-- 数据点 -->
+                                <circle class="chart-dot" cx="200" cy="150" r="5" />
+                                <circle class="chart-dot" cx="400" cy="120" r="5" />
+                                <circle class="chart-dot" cx="600" cy="100" r="5" />
+                                <circle class="chart-dot" cx="800" cy="80" r="5" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">
+                                <span class="chart-title-icon"></span>
+                                技能成功率分布
+                            </div>
+                            <div class="chart-actions">
+                                <button class="chart-btn active">全部</button>
+                                <button class="chart-btn">设计类</button>
+                                <button class="chart-btn">核心类</button>
+                            </div>
+                        </div>
+                        <div class="chart-body">
+                            <div style="display: flex; justify-content: center; align-items: center; height: 100%; gap: 60px;">
+                                <div style="text-align: center;">
+                                    <div style="width: 140px; height: 140px; border-radius: 50%; background: conic-gradient(#00f0ff 0% 78%, rgba(74,158,255,0.1) 78% 100%); box-shadow: 0 0 30px rgba(0,240,255,0.3); margin: 0 auto; position: relative;">
+                                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                            <div style="font-size: 32px; font-weight: 700; color: var(--neon-cyan);">78%</div>
+                                            <div style="font-size: 12px; color: var(--text-muted);">UI Design</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="width: 140px; height: 140px; border-radius: 50%; background: conic-gradient(#ff00ff 0% 85%, rgba(255,0,255,0.1) 85% 100%); box-shadow: 0 0 30px rgba(255,0,255,0.3); margin: 0 auto; position: relative;">
+                                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                            <div style="font-size: 32px; font-weight: 700; color: var(--neon-pink);">85%</div>
+                                            <div style="font-size: 12px; color: var(--text-muted);">Core</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="width: 140px; height: 140px; border-radius: 50%; background: conic-gradient(#00ff88 0% 92%, rgba(0,255,136,0.1) 92% 100%); box-shadow: 0 0 30px rgba(0,255,136,0.3); margin: 0 auto; position: relative;">
+                                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                            <div style="font-size: 32px; font-weight: 700; color: var(--neon-green);">92%</div>
+                                            <div style="font-size: 12px; color: var(--text-muted);">Memory</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 失败模式分析 -->
+                <section class="failure-section">
+                    <div class="chart-header">
+                        <div class="chart-title">
+                            <span class="chart-title-icon"></span>
+                            失败模式分析
+                        </div>
+                        <button class="btn btn-secondary">查看详情 →</button>
+                    </div>
+                    <div class="failure-grid">
+                        <div class="failure-item">
+                            <div class="failure-name">技能未触发</div>
+                            <div class="failure-count">42</div>
+                            <div class="failure-percentage">占总失败的 35%</div>
+                            <div class="failure-trend down">↓ 较上周减少 12%</div>
+                        </div>
+                        <div class="failure-item">
+                            <div class="failure-name">执行超时</div>
+                            <div class="failure-count">38</div>
+                            <div class="failure-percentage">占总失败的 31%</div>
+                            <div class="failure-trend">→ 与上周持平</div>
+                        </div>
+                        <div class="failure-item">
+                            <div class="failure-name">上下文超限</div>
+                            <div class="failure-count">25</div>
+                            <div class="failure-percentage">占总失败的 21%</div>
+                            <div class="failure-trend down">↓ 较上周减少 8%</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 技能列表 -->
+                <section class="skills-table-section">
+                    <div class="table-header">
+                        <div class="table-title">
+                            技能库 · 按性能排序
+                        </div>
+                        <div style="display: flex; gap: 12px;">
+                            <div class="search-box" style="width: 200px;">
+                                <span>🔍</span>
+                                <input type="text" placeholder="搜索技能..." />
+                            </div>
+                            <button class="btn btn-primary">＋ 导入技能</button>
+                        </div>
+                    </div>
+                    <table class="skills-table">
+                        <thead>
+                            <tr>
+                                <th>技能名称</th>
+                                <th>分类</th>
+                                <th>状态</th>
+                                <th>成功率</th>
+                                <th>版本</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="skill-name">
+                                        <div class="skill-icon" style="background: rgba(0,240,255,0.15);">🎨</div>
+                                        <div class="skill-info">
+                                            <div class="skill-title">赛博朋克风格设计</div>
+                                            <div class="skill-category">v3.0 · 更新于 2 小时前</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span style="color: var(--text-muted);">UI/UX</span></td>
+                                <td><span class="status-badge online"><span class="status-dot"></span>活跃</span></td>
+                                <td><span class="skill-rate good">97%</span></td>
+                                <td><span style="color: var(--text-muted);">v3.0</span></td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 8px 12px; font-size: 12px;">编辑</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="skill-name">
+                                        <div class="skill-icon" style="background: rgba(139,92,246,0.15);">📐</div>
+                                        <div class="skill-info">
+                                            <div class="skill-title">CARP 设计原则</div>
+                                            <div class="skill-category">v2.0 · 更新于 1 天前</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span style="color: var(--text-muted);">UI/UX</span></td>
+                                <td><span class="status-badge online"><span class="status-dot"></span>活跃</span></td>
+                                <td><span class="skill-rate good">95%</span></td>
+                                <td><span style="color: var(--text-muted);">v2.0</span></td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 8px 12px; font-size: 12px;">编辑</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="skill-name">
+                                        <div class="skill-icon" style="background: rgba(16,185,129,0.15);">🧠</div>
+                                        <div class="skill-info">
+                                            <div class="skill-title">Memory Manager</div>
+                                            <div class="skill-category">v5.2 · 更新于 3 天前</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span style="color: var(--text-muted);">Core</span></td>
+                                <td><span class="status-badge online"><span class="status-dot"></span>活跃</span></td>
+                                <td><span class="skill-rate good">99%</span></td>
+                                <td><span style="color: var(--text-muted);">v5.2</span></td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 8px 12px; font-size: 12px;">编辑</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="skill-name">
+                                        <div class="skill-icon" style="background: rgba(245,158,11,0.15);">⚡</div>
+                                        <div class="skill-info">
+                                            <div class="skill-title">Skill Executor</div>
+                                            <div class="skill-category">v4.1 · 更新于 5 天前</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span style="color: var(--text-muted);">Core</span></td>
+                                <td><span class="status-badge warning"><span class="status-dot"></span>注意</span></td>
+                                <td><span class="skill-rate normal">85%</span></td>
+                                <td><span style="color: var(--text-muted);">v4.1</span></td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 8px 12px; font-size: 12px;">编辑</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="skill-name">
+                                        <div class="skill-icon" style="background: rgba(239,68,68,0.15);">📋</div>
+                                        <div class="skill-info">
+                                            <div class="skill-title">Task Orchestrator</div>
+                                            <div class="skill-category">v3.8 · 更新于 1 周前</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span style="color: var(--text-muted);">Core</span></td>
+                                <td><span class="status-badge warning"><span class="status-dot"></span>注意</span></td>
+                                <td><span class="skill-rate normal">78%</span></td>
+                                <td><span style="color: var(--text-muted);">v3.8</span></td>
+                                <td>
+                                    <button class="btn btn-secondary" style="padding: 8px 12px; font-size: 12px;">优化</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Bot Modal -->
+    <div class="modal-overlay" id="botModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">新建 Bot</h3>
+                <button class="modal-close" onclick="closeBotModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Bot 名称</label>
+                    <input type="text" class="form-input" placeholder="例如：场控、客服..." />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">选择模型</label>
+                    <select class="form-input">
+                        <option value="qwen">Qwen 3.5 Plus</option>
+                        <option value="kimi">Kimi K2.5</option>
+                        <option value="gpt4o">GPT-4o Mini</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeBotModal()">取消</button>
+                <button class="btn btn-primary">创建 Bot</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 侧边栏切换
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.style.width = sidebar.style.width === '64px' ? '260px' : '64px';
+        }
+
+        // Bot 相关
+        function openBotModal() {
+            document.getElementById('botModal').classList.add('active');
+        }
+
+        function closeBotModal() {
+            document.getElementById('botModal').classList.remove('active');
+        }
+
+        function editBot(name) {
+            document.querySelector('#botModal .modal-title').textContent = '编辑 Bot: ' + name;
+            openBotModal();
+        }
+
+        function deleteBot(name) {
+            if (confirm(`确定要删除 Bot "${name}" 吗？`)) {
+                alert(`删除 Bot: ${name}`);
+            }
+        }
+
+        // 技能相关
+        function openSkillModal() {
+            alert('导入技能功能 - 可扩展模态框');
+        }
+
+        // 任务相关
+        function openTaskModal() {
+            alert('新建任务功能 - 可扩展模态框');
+        }
+
+        // KPI 点击动画
+        document.querySelectorAll('.kpi-card').forEach(card => {
+            card.addEventListener('click', function() {
+                this.style.animation = 'none';
+                setTimeout(() => this.style.animation = 'none', 10);
+            });
+        });
+
+        // 导航项点击
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                if (!this.querySelector('.nav-item-actions')) {
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                }
+            });
+        });
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'k') {
+                e.preventDefault();
+                document.querySelector('.search-box input').focus();
+            }
+        });
+    </script>
+</body>
+</html>

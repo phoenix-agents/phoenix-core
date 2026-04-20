@@ -1,0 +1,3986 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phoenix Core Dashboard v5.0 - 真实 API</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0f1f;
+            --bg-secondary: #16162a;
+            --bg-card: #1a1f3f;
+            --bg-hover: #2a2a4a;
+            --bg-active: #3a3a6a;
+
+            --neon-cyan: #00f0ff;
+            --neon-blue: #4a9eff;
+            --neon-purple: #8b5cf6;
+            --neon-green: #00ff88;
+
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+
+            --text-primary: #eaeaea;
+            --text-secondary: #a5b4fc;
+            --text-muted: #888;
+
+            --sidebar-width: 260px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app { display: flex; height: 100vh; }
+
+        /* ===== 侧边栏 ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-secondary);
+            border-right: 1px solid rgba(74, 158, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(74, 158, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-section {
+            padding: 8px 16px;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 16px;
+        }
+
+        .nav-list { padding: 8px; }
+
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .nav-item:hover { background: var(--bg-hover); }
+        .nav-item.active {
+            background: var(--bg-active);
+            border-left: 3px solid var(--neon-cyan);
+        }
+
+        .nav-icon { font-size: 16px; }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid rgba(74, 158, 255, 0.1);
+            margin-top: auto;
+        }
+
+        .sidebar-profile {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+        }
+
+        .profile-info { margin-left: 12px; }
+        .profile-name { font-size: 13px; font-weight: 600; }
+        .profile-role { font-size: 11px; color: var(--text-muted); }
+
+        /* ===== 主内容区 ===== */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            height: 56px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid rgba(74, 158, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .header-title { font-size: 16px; font-weight: 600; }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--neon-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        /* ===== KPI 卡片 ===== */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(74, 158, 255, 0.1);
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .kpi-trend {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .kpi-trend.up { color: var(--neon-green); }
+        .kpi-trend.down { color: var(--error); }
+
+        /* ===== 内容卡片 ===== */
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(74, 158, 255, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* ===== Bot 状态卡片 ===== */
+        .bot-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .bot-card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid rgba(74, 158, 255, 0.1);
+        }
+
+        .bot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .bot-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .bot-status {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .bot-status.online {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .bot-status.offline {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--error);
+        }
+
+        .bot-model {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .bot-stats {
+            display: flex;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .bot-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+
+        .btn-primary {
+            background: var(--neon-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3a8eff;
+        }
+
+        .btn-secondary {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-active);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        /* ===== 表格样式 ===== */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(74, 158, 255, 0.1);
+        }
+
+        .table th {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .table td {
+            font-size: 13px;
+        }
+
+        .table tr:hover {
+            background: var(--bg-hover);
+        }
+
+        .status-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .status-badge.pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .status-badge.in_progress { background: rgba(74, 158, 255, 0.2); color: var(--neon-blue); }
+        .status-badge.completed { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .status-badge.failed { background: rgba(239, 68, 68, 0.2); color: var(--error); }
+
+        /* ===== 失败模式卡片 ===== */
+        .failure-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .failure-card {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .failure-count {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--error);
+            margin-bottom: 8px;
+        }
+
+        .failure-mode {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .failure-trend {
+            font-size: 11px;
+        }
+
+        .failure-trend.down { color: var(--success); }
+        .failure-trend.up { color: var(--error); }
+
+        /* ===== Toast 通知 ===== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            background: var(--bg-card);
+            border: 1px solid rgba(74, 158, 255, 0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--error); }
+        .toast.warning { border-color: var(--warning); }
+
+        /* ===== 模态框 ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex !important;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(74, 158, 255, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        /* ===== 加载状态 ===== */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(74, 158, 255, 0.3);
+            border-top-color: var(--neon-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-hover) 50%, var(--bg-card) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">🦞 PHOENIX CORE</div>
+            </div>
+
+            <div class="nav-section">监控</div>
+            <div class="nav-list">
+                <div class="nav-item active" onclick="navigateTo('dashboard')">
+                    <span class="nav-icon">📊</span>
+                    <span>概览</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('analytics')">
+                    <span class="nav-icon">📈</span>
+                    <span>数据分析</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('chat')">
+                    <span class="nav-icon">💬</span>
+                    <span>大脑对话</span>
+                </div>
+            </div>
+
+            <div class="nav-section">资源管理</div>
+            <div class="nav-list">
+                <div class="nav-item" onclick="navigateTo('bots')">
+                    <span class="nav-icon">🤖</span>
+                    <span>Bot 管理</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('tasks')">
+                    <span class="nav-icon">📋</span>
+                    <span>任务队列</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('skills')">
+                    <span class="nav-icon">📚</span>
+                    <span>技能市场</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('memory')">
+                    <span class="nav-icon">🧠</span>
+                    <span>记忆中心</span>
+                </div>
+            </div>
+
+            <div class="nav-section">系统</div>
+            <div class="nav-list">
+                <div class="nav-item" onclick="navigateTo('settings')">
+                    <span class="nav-icon">⚙️</span>
+                    <span>系统设置</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('devices')">
+                    <span class="nav-icon">📡</span>
+                    <span>设备管理</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('support')">
+                    <span class="nav-icon">💬</span>
+                    <span>技术支持</span>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-profile">
+                    <div class="avatar">S</div>
+                    <div class="profile-info">
+                        <div class="profile-name">Super Admin</div>
+                        <div class="profile-role">系统管理员</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main">
+            <header class="header">
+                <div class="header-title" id="pageTitle">Dashboard</div>
+                <div class="header-right">
+                    <div class="status-indicator">
+                        <span class="status-dot" id="statusDot"></span>
+                        <span id="statusText">已连接</span>
+                    </div>
+                    <button class="btn btn-secondary" onclick="refreshData()">刷新</button>
+                </div>
+            </header>
+
+            <div class="content" id="content">
+                <!-- Dashboard 首页 -->
+                <div id="page-dashboard">
+                    <!-- KPI 卡片 -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-label">总任务</div>
+                            <div class="kpi-value" id="kpiTotalTasks">-</div>
+                            <div class="kpi-trend up" id="kpiTasksTrend">--</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">待处理</div>
+                            <div class="kpi-value" id="kpiPending">-</div>
+                            <div class="kpi-trend" id="kpiPendingTrend">--</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">活跃技能</div>
+                            <div class="kpi-value" id="kpiSkills">-</div>
+                            <div class="kpi-trend up" id="kpiSkillsTrend">--</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">成功率</div>
+                            <div class="kpi-value" id="kpiSuccessRate">-</div>
+                            <div class="kpi-trend up" id="kpiSuccessRateTrend">--</div>
+                        </div>
+                    </div>
+
+                    <!-- Bot 状态概览 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Bot 状态概览</div>
+                            <button class="btn btn-primary btn-sm" onclick="navigateTo('bots')">查看全部</button>
+                        </div>
+                        <div class="bot-grid" id="botGrid">
+                            <!-- 由 JS 动态渲染 -->
+                        </div>
+                    </div>
+
+                    <!-- 失败模式分析 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">失败模式分析</div>
+                        </div>
+                        <div class="failure-grid" id="failureGrid">
+                            <!-- 由 JS 动态渲染 -->
+                        </div>
+                    </div>
+
+                    <!-- 最近任务 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">最近任务</div>
+                            <button class="btn btn-primary btn-sm" onclick="navigateTo('tasks')">查看全部</button>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>标题</th>
+                                    <th>分配给</th>
+                                    <th>优先级</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentTasksBody">
+                                <!-- 由 JS 动态渲染 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Bot 管理页面 -->
+                <div id="page-bots" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Bot 列表</div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary" onclick="openCreateBotModal()">+ 新建 Bot</button>
+                                <button class="btn btn-primary" onclick="startAllBots()">全部启动</button>
+                            </div>
+                        </div>
+                        <div class="bot-grid" id="botsPageGrid">
+                            <!-- 由 JS 动态渲染 -->
+                        </div>
+                    </div>
+
+                    <!-- Bot 配置卡片 -->
+                    <div class="card" style="margin-top: 16px;">
+                        <div class="card-header">
+                            <div class="card-title">Bot 配置</div>
+                        </div>
+                        <div id="botConfigContent">
+                            <div style="padding: 40px; text-align: center; color: var(--text-muted);">
+                                选择一个 Bot 查看配置
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bot 日志查看 -->
+                    <div class="card" style="margin-top: 16px;">
+                        <div class="card-header">
+                            <div class="card-title">Bot 日志</div>
+                            <select id="botLogSelect" onchange="loadBotLogs()" style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);">
+                                <option value="">选择 Bot</option>
+                                <option value="编导">编导</option>
+                                <option value="剪辑">剪辑</option>
+                                <option value="美工">美工</option>
+                                <option value="场控">场控</option>
+                                <option value="客服">客服</option>
+                                <option value="运营">运营</option>
+                                <option value="渠道">渠道</option>
+                                <option value="小小谦">小小谦</option>
+                            </select>
+                            <button class="btn btn-sm btn-secondary" onclick="loadBotLogs()">刷新</button>
+                        </div>
+                        <div id="botLogsContent" style="max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 12px; background: #0d1117; padding: 16px; border-radius: 8px;">
+                            <div style="color: var(--text-muted); text-align: center; padding: 40px;">选择 Bot 查看日志</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 任务队列页面 -->
+                <div id="page-tasks" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">任务队列</div>
+                            <button class="btn btn-primary" onclick="openTaskModal()">新建任务</button>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>标题</th>
+                                    <th>描述</th>
+                                    <th>分配给</th>
+                                    <th>优先级</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tasksBody">
+                                <!-- 由 JS 动态渲染 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 技能库页面 -->
+                <div id="page-skills" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">技能列表</div>
+                            <div style="display: flex; gap: 12px;">
+                                <input type="text" id="skillSearch" placeholder="🔍 搜索技能..."
+                                       style="flex: 1; padding: 8px 12px; border: 1px solid rgba(74, 158, 255, 0.2);
+                                              border-radius: 6px; background: var(--bg-secondary); color: var(--text-primary);"
+                                       oninput="filterSkills()">
+                                <select id="skillCategoryFilter"
+                                        style="padding: 8px 12px; border: 1px solid rgba(74, 158, 255, 0.2);
+                                               border-radius: 6px; background: var(--bg-secondary); color: var(--text-primary);"
+                                        onchange="filterSkills()">
+                                    <option value="">全部分类</option>
+                                    <option value="development">开发工具</option>
+                                    <option value="research">研究搜索</option>
+                                    <option value="productivity">生产力</option>
+                                    <option value="analysis">数据分析</option>
+                                    <option value="security">安全防护</option>
+                                    <option value="creative">创意工具</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="skillsList">
+                            <!-- 由 JS 动态渲染 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 记忆中心页面 -->
+                <div id="page-memory" style="display: none;">
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-label">Discord 记忆</div>
+                            <div class="kpi-value" id="memoryShared">-</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">私有记忆</div>
+                            <div class="kpi-value" id="memoryPrivate">-</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">会话总数</div>
+                            <div class="kpi-value" id="memorySessions">-</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Bot 记忆</div>
+                            <div class="kpi-value" id="memoryBotTotal">-</div>
+                        </div>
+                    </div>
+                    <div id="memoryMonitoringStatus">
+                        <!-- 由 JS 动态渲染监控状态 -->
+                    </div>
+                    <div style="margin: 16px 0;">
+                        <button class="btn btn-primary" onclick="repairMemory()" style="padding: 10px 20px; font-size: 14px;">
+                            🔧 一键修复记忆问题
+                        </button>
+                        <button class="btn btn-secondary" onclick="loadMemoryStats()" style="padding: 10px 20px; font-size: 14px; margin-left: 8px;">
+                            🔄 刷新状态
+                        </button>
+                    </div>
+                    <div id="memoryRepairLog" style="display: none; margin: 16px 0;">
+                        <!-- 修复日志显示区域 -->
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">共享记忆浏览</div>
+                        </div>
+                        <div id="sharedMemoryContent">
+                            <!-- 由 JS 动态渲染 -->
+                        </div>
+                    </div>
+                    <div class="card" style="margin-top: 16px;">
+                        <div class="card-header">
+                            <div class="card-title">Bot 工作区记忆</div>
+                        </div>
+                        <div id="botMemoryContent">
+                            <!-- 由 JS 动态渲染 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 数据分析页面 -->
+                <div id="page-analytics" style="display: none;">
+                    <div class="kpi-grid" style="margin-bottom: 24px;">
+                        <div class="kpi-card">
+                            <div class="kpi-label">总任务数</div>
+                            <div class="kpi-value" id="analyticsTotalTasks">0</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">完成率</div>
+                            <div class="kpi-value" id="analyticsCompletionRate">0%</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Bot 活跃度</div>
+                            <div class="kpi-value" id="analyticsBotActivity">0%</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">任务状态分布</div>
+                        </div>
+                        <div style="height: 300px; display: flex; justify-content: center;">
+                            <canvas id="taskStatusChart"></canvas>
+                        </div>
+                        <div style="padding: 16px; margin-top: 16px; background: rgba(74, 158, 255, 0.05); border-radius: 8px;">
+                            <div style="font-size: 13px; margin-bottom: 12px; font-weight: 600; color: var(--neon-cyan);">📊 任务状态说明</div>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 12px; color: var(--text-muted);">
+                                <div><span style="color: #4a9eff;">●</span> 待处理 (Pending)：任务已创建，等待 Bot 领取执行</div>
+                                <div><span style="color: #f59e0b;">●</span> 执行中 (In Progress)：Bot 正在执行任务</div>
+                                <div><span style="color: #00ff88;">●</span> 已完成 (Completed)：任务成功完成</div>
+                                <div><span style="color: #ef4444;">●</span> 失败 (Failed)：任务执行失败（可重试）</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Bot 任务量分布</div>
+                        </div>
+                        <div style="height: 300px;">
+                            <canvas id="botTaskChart"></canvas>
+                        </div>
+                        <div style="padding: 16px; margin-top: 16px; background: rgba(74, 158, 255, 0.05); border-radius: 8px;">
+                            <div style="font-size: 13px; margin-bottom: 12px; font-weight: 600; color: var(--neon-cyan);">🤖 Bot 任务说明</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">
+                                任务会自动分配给对应的 Bot，当 Bot 接受任务后会自动显示在该 Bot 名下。
+                                任务来源：任务队列、Bot 协作请求、用户手动创建
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: 16px;">
+                        <div class="card-header">
+                            <div class="card-title">任务详情列表</div>
+                            <button class="btn btn-sm btn-secondary" onclick="loadTaskDetails()" style="margin-left: auto;">刷新列表</button>
+                        </div>
+                        <div id="analyticsTaskList">
+                            <div style="padding: 40px; text-align: center; color: var(--text-muted);">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 系统设置页面 -->
+                <div id="page-settings" style="display: none;">
+                    <!-- 设置 tabs -->
+                    <div style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid rgba(74, 158, 255, 0.1); padding-bottom: 12px;">
+                        <button class="btn btn-sm btn-primary" onclick="showSettingsTab('api')">API Keys</button>
+                        <button class="btn btn-sm btn-secondary" onclick="showSettingsTab('discord')">Discord</button>
+                        <button class="btn btn-sm btn-secondary" onclick="showSettingsTab('storage')">存储配置</button>
+                        <button class="btn btn-sm btn-secondary" onclick="showSettingsTab('network')">网络配置</button>
+                        <button class="btn btn-sm btn-secondary" onclick="showSettingsTab('system')">系统信息</button>
+                    </div>
+
+                    <!-- API Keys 配置 -->
+                    <div id="settings-api" class="settings-tab">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">🔑 API Keys 管理</div>
+                                <button class="btn btn-primary" onclick="validateConfig()">验证全部</button>
+                            </div>
+                            <div id="apiKeysContent"></div>
+                        </div>
+                    </div>
+
+                    <!-- Discord 配置 -->
+                    <div id="settings-discord" class="settings-tab" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">💬 Discord 配置</div>
+                            </div>
+                            <div id="discordContent"></div>
+                        </div>
+                    </div>
+
+                    <!-- 存储配置 -->
+                    <div id="settings-storage" class="settings-tab" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">💾 存储配置</div>
+                            </div>
+                            <div id="storageContent"></div>
+                        </div>
+                    </div>
+
+                    <!-- 网络配置 -->
+                    <div id="settings-network" class="settings-tab" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">🌐 网络配置</div>
+                            </div>
+                            <div id="networkContent"></div>
+                        </div>
+                    </div>
+
+                    <!-- 系统信息 -->
+                    <div id="settings-system" class="settings-tab" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">ℹ️ 系统信息</div>
+                            </div>
+                            <div id="systemContent"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 设备管理页面 -->
+                <div id="page-devices" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">📡 远程设备管理</div>
+                            <button class="btn btn-primary" onclick="loadDevices()">🔄 刷新</button>
+                        </div>
+                        <div id="devicesContent">
+                            <div style="padding: 40px; text-align: center; color: var(--text-muted);">
+                                加载中...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 技术支持页面 -->
+                <div id="page-support" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">🛠️ 技术支持</div>
+                        </div>
+                        <div style="text-align: center; padding: 40px;">
+                            <div style="font-size: 18px; margin-bottom: 8px;">Phoenix Core 技术支持</div>
+                            <div style="color: var(--text-muted); margin-bottom: 24px;">有任何问题？扫描二维码添加技术支持</div>
+
+                            <!-- 二维码区域 - 三个平台 -->
+                            <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin-bottom: 32px;">
+                                <!-- 微信 -->
+                                <div style="text-align: center;">
+                                    <div style="display: inline-block; padding: 16px; background: white; border-radius: 16px; margin-bottom: 12px;">
+                                        <img src="/static/wechat-qr.png" alt="微信二维码"
+                                             style="width: 180px; height: 180px; display: block; border-radius: 8px;"/>
+                                    </div>
+                                    <div style="font-size: 14px; font-weight: 600;">💬 微信</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">扫码添加好友</div>
+                                </div>
+                                <!-- WhatsApp -->
+                                <div style="text-align: center;">
+                                    <div style="display: inline-block; padding: 16px; background: white; border-radius: 16px; margin-bottom: 12px;">
+                                        <img src="/static/whatsapp-qr.png" alt="WhatsApp 二维码"
+                                             style="width: 180px; height: 180px; display: block; border-radius: 8px;"/>
+                                    </div>
+                                    <div style="font-size: 14px; font-weight: 600;">📱 WhatsApp</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">扫码发送消息</div>
+                                </div>
+                                <!-- Line -->
+                                <div style="text-align: center;">
+                                    <div style="display: inline-block; padding: 16px; background: white; border-radius: 16px; margin-bottom: 12px;">
+                                        <img src="/static/line-qr.png" alt="Line 二维码"
+                                             style="width: 180px; height: 180px; display: block; border-radius: 8px;"/>
+                                    </div>
+                                    <div style="font-size: 14px; font-weight: 600;">🔵 Line</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">扫码添加好友</div>
+                                </div>
+                            </div>
+
+                            <!-- 联系方式 -->
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 600px; margin: 0 auto;">
+                                <div style="padding: 16px; background: rgba(74, 158, 255, 0.1); border-radius: 12px;">
+                                    <div style="font-size: 24px; margin-bottom: 8px;">📧</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">邮箱</div>
+                                    <div style="font-size: 14px; margin-top: 4px; font-weight: 600;">samwong0524@gmail.com</div>
+                                </div>
+                                <div style="padding: 16px; background: rgba(0, 240, 255, 0.1); border-radius: 12px;">
+                                    <div style="font-size: 24px; margin-bottom: 8px;">🌐</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">官网</div>
+                                    <div style="font-size: 14px; margin-top: 4px;">phoenix-core.ai</div>
+                                </div>
+                                <div style="padding: 16px; background: rgba(139, 92, 246, 0.1); border-radius: 12px;">
+                                    <div style="font-size: 24px; margin-bottom: 8px;">📱</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">即时通讯</div>
+                                    <div style="font-size: 14px; margin-top: 4px;">微信 / WhatsApp / Line</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 常见问题 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">❓ 常见问题</div>
+                        </div>
+                        <div style="padding: 16px;">
+                            <div style="margin-bottom: 16px;">
+                                <div style="font-weight: 600; margin-bottom: 4px;">🔹 如何配置 Bot？</div>
+                                <div style="color: var(--text-muted); font-size: 13px;">前往系统设置 → API Keys 配置各平台的 Bot Token</div>
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <div style="font-weight: 600; margin-bottom: 4px;">🔹 Discord Bot 频繁掉线？</div>
+                                <div style="color: var(--text-muted); font-size: 13px;">检查网络配置，可能需要配置代理（HTTPS_PROXY）</div>
+                            </div>
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">🔹 如何查看 Bot 日志？</div>
+                                <div style="color: var(--text-muted); font-size: 13px;">前往 Bot 管理 → 选择 Bot → 查看日志</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 大脑对话页面 -->
+                <div id="page-chat" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">🧠 与 Phoenix Core 大脑对话</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">意图识别 · 任务拆解 · 多 Bot 协作</div>
+                        </div>
+                        <div id="chatContainer" style="padding: 0;">
+                            <div id="chatMessages" style="height: 400px; overflow-y: auto; padding: 20px; background: rgba(0,0,0,0.2);">
+                                <div style="padding: 12px 16px; background: rgba(0, 240, 255, 0.1); border-radius: 12px; margin-bottom: 12px; border-left: 3px solid var(--neon-cyan);">
+                                    <div style="font-size: 13px; line-height: 1.6;">
+                                        你好！我是 Phoenix Core 主大脑 🧠<br><br>
+                                        我可以帮你：<br>
+                                        • 意图识别与任务拆解<br>
+                                        • 多 Bot 协作编排<br>
+                                        • 查询审计日志与任务状态<br><br>
+                                        有什么可以帮你的？
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 12px; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(74, 158, 255, 0.1);">
+                                <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+                                    <button class="btn btn-sm btn-secondary" onclick="sendQuickMessage('你好')">👋 打招呼</button>
+                                    <button class="btn btn-sm btn-secondary" onclick="sendQuickMessage('帮我查订单 #12345')">📦 查订单</button>
+                                    <button class="btn btn-sm btn-secondary" onclick="sendQuickMessage('今天有什么任务？')">📋 查任务</button>
+                                    <button class="btn btn-sm btn-secondary" onclick="sendQuickMessage('查看最近的错误日志')">⚠️ 查错误</button>
+                                </div>
+                                <div style="display: flex; gap: 12px;">
+                                    <textarea id="chatInput" placeholder="输入你的问题或指令..." rows="2"
+                                              style="flex: 1; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(74, 158, 255, 0.3);
+                                                     border-radius: 8px; color: var(--text-primary); font-size: 14px; resize: none;"></textarea>
+                                    <button id="sendBtn" class="btn btn-primary" onclick="sendMessage()"
+                                            style="padding: 12px 24px; align-self: flex-end;">发送</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 新建任务模态框 -->
+    <div class="modal-overlay" id="taskModal" style="display: none;">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">新建任务</h3>
+                <button class="modal-close" onclick="closeTaskModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-size: 13px;">任务标题</label>
+                    <input type="text" class="form-input" id="taskTitleInput" placeholder="请输入任务标题"
+                           style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);"/>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-size: 13px;">描述</label>
+                    <textarea class="form-input" id="taskDescInput" placeholder="任务描述（可选）" rows="3"
+                              style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary); resize: vertical;"></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-size: 13px;">分配给</label>
+                    <select class="form-select" id="taskBotSelect"
+                            style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);">
+                        <option value="编导">🎬 编导</option>
+                        <option value="剪辑">✂️ 剪辑</option>
+                        <option value="美工">🎨 美工</option>
+                        <option value="场控">🎮 场控</option>
+                        <option value="客服">💬 客服</option>
+                        <option value="运营">📊 运营</option>
+                        <option value="渠道">📡 渠道</option>
+                        <option value="小小谦">🤖 小小谦</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-size: 13px;">优先级</label>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-sm btn-secondary priority-btn" data-priority="low" onclick="selectPriority(this)">低</button>
+                        <button class="btn btn-sm btn-primary priority-btn" data-priority="normal" onclick="selectPriority(this)">普通</button>
+                        <button class="btn btn-sm btn-secondary priority-btn" data-priority="high" onclick="selectPriority(this)" style="color: #f59e0b;">高</button>
+                        <button class="btn btn-sm btn-secondary priority-btn" data-priority="critical" onclick="selectPriority(this)" style="color: #ef4444;">紧急</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding-top: 16px;">
+                <button class="btn btn-secondary" onclick="closeTaskModal()">取消</button>
+                <button class="btn btn-primary" onclick="createTask()">创建任务</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 任务详情模态框 -->
+    <div class="modal-overlay" id="botWizardModal" style="display: none;">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 class="modal-title">📜 Bot 配置向导</h3>
+                <button class="modal-close" onclick="closeBotWizard()">×</button>
+            </div>
+            <div class="modal-body" id="botWizardContent">
+                <!-- 动态渲染对话内容 -->
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding-top: 16px;">
+                <button class="btn btn-secondary" onclick="closeBotWizard()">取消</button>
+                <button class="btn btn-primary" id="wizardNextBtn" onclick="wizardNext()" style="display: none;">下一步</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 任务详情模态框 -->
+    <div class="modal-overlay" id="taskDetailModal" style="display: none;">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title">任务详情</h3>
+                <button class="modal-close" onclick="closeTaskDetailModal()">×</button>
+            </div>
+            <div class="modal-body" id="taskDetailContent">
+                <!-- 由 JS 动态渲染 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeTaskDetailModal()">关闭</button>
+                <button class="btn btn-danger" onclick="deleteCurrentTask()">删除任务</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 技能详情模态框 -->
+    <div class="modal-overlay" id="skillDetailModal" style="display: none;">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 class="modal-title">技能详情</h3>
+                <button class="modal-close" onclick="closeSkillDetailModal()">×</button>
+            </div>
+            <div class="modal-body" id="skillDetailContent">
+                <!-- 由 JS 动态渲染 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSkillDetailModal()">关闭</button>
+                <button class="btn btn-secondary" onclick="editCurrentSkill()">编辑技能</button>
+                <button class="btn btn-primary" onclick="optimizeCurrentSkill()">优化技能</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑技能模态框 -->
+    <div class="modal-overlay" id="skillEditModal" style="display: none;">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 class="modal-title">技能详情</h3>
+                <button class="modal-close" onclick="closeSkillDetailModal()">×</button>
+            </div>
+            <div class="modal-body" id="skillDetailContent">
+                <!-- 由 JS 动态渲染 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSkillDetailModal()">关闭</button>
+                <button class="btn btn-secondary" onclick="editCurrentSkill()">编辑技能</button>
+                <button class="btn btn-primary" onclick="optimizeCurrentSkill()">优化技能</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新建 Bot 模态框 -->
+    <div class="modal-overlay" id="createBotModal" style="display: none;">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title">🤖 新建 Bot</h3>
+                <button class="modal-close" onclick="closeCreateBotModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="padding: 16px; background: rgba(74, 158, 255, 0.1); border-radius: 8px; margin-bottom: 20px;">
+                    <div style="font-size: 13px; font-weight: 600; color: var(--neon-cyan); margin-bottom: 8px;">📋 准备步骤</div>
+                    <ol style="font-size: 12px; color: var(--text-muted); padding-left: 20px; line-height: 1.8;">
+                        <li>在 <a href="https://discord.com/developers/applications" target="_blank" style="color: var(--neon-blue);">Discord 开发者门户</a> 创建新 Bot</li>
+                        <li>复制 <b>Bot Token</b>（点击 "Reset Bot Token"）</li>
+                        <li>复制 <b>Client ID</b>（在 "OAuth2" 或应用信息页面）</li>
+                        <li>复制 <b>Server ID</b>（在 Discord 中右键点击服务器 > 复制 ID）</li>
+                        <li>复制 <b>Channel ID</b>（在 Discord 中右键点击频道 > 复制 ID）</li>
+                        <li>在此填写配置并保存</li>
+                    </ol>
+                    <div style="margin-top: 12px; padding: 8px; background: rgba(0, 0, 0, 0.2); border-radius: 6px; font-size: 11px; color: var(--text-muted);">
+                        💡 提示：需要先在 Discord 用户设置 > 高级 中开启 "开发者模式" 才能复制 ID
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600;">Bot 名称</label>
+                    <input type="text" id="newBotName" class="form-input" placeholder="例如：助手"
+                           style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600;">Discord Bot Token</label>
+                    <input type="password" id="newBotToken" class="form-input" placeholder="MTQ3...xxx.xxx"
+                           style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);">
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Token 只会保存在本地 .env 文件中，不会上传</div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600;">Client ID</label>
+                    <input type="text" id="newBotClientId" class="form-input" placeholder="1479053473038467212"
+                           style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);">
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">用于生成 OAuth2 邀请链接，让 Bot 加入服务器</div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600;">Server ID</label>
+                    <input type="text" id="newBotServerId" class="form-input" placeholder="1479051401165537410"
+                           style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);">
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Bot 要加入的 Discord 服务器 ID</div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600;">默认频道 ID</label>
+                    <input type="text" id="newBotChannel" class="form-input" placeholder="1479051401777909832"
+                           style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);">
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">在 Discord 中右键点击频道 > 复制频道 ID</div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600;">模型选择</label>
+                    <select id="newBotModel" class="form-select"
+                            style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);">
+                        <option value="qwen3.5-plus">Qwen 3.5 Plus (推荐)</option>
+                        <option value="qwen3.6-plus">Qwen 3.6 Plus</option>
+                        <option value="qwen-max">Qwen Max</option>
+                    </select>
+                </div>
+
+                <div id="createBotResult" style="display: none; padding: 12px; border-radius: 6px; margin-top: 16px;"></div>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding-top: 16px;">
+                <button class="btn btn-secondary" onclick="closeCreateBotModal()">取消</button>
+                <button class="btn btn-primary" onclick="submitCreateBot()">创建并启动</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 订阅模型管理模态框 -->
+    <div class="modal-overlay" id="subscribeModal" style="display: none;">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="subscribeModalTitle">管理订阅模型</h3>
+                <button class="modal-close" onclick="closeSubscribeModal()">×</button>
+            </div>
+            <div class="modal-body" id="subscribeModalContent">
+                <!-- 动态填充 -->
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding-top: 16px;">
+                <button class="btn btn-secondary" onclick="closeSubscribeModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveSubscribedModels()">💾 保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑技能模态框 (1) -->
+    <div class="modal-overlay" id="skillEditModal" style="display: none;">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 class="modal-title">编辑技能</h3>
+                <button class="modal-close" onclick="closeSkillEditModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 20px;">
+                    <label class="form-label">技能 ID</label>
+                    <input type="text" class="form-input" id="editSkillId" readonly style="background: var(--bg-secondary); color: var(--text-muted);">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label class="form-label">技能名称</label>
+                    <input type="text" class="form-input" id="editSkillName" placeholder="输入技能名称">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label class="form-label">技能描述</label>
+                    <textarea class="form-input" id="editSkillDescription" rows="4" placeholder="输入技能描述"></textarea>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label class="form-label">技能内容</label>
+                    <textarea class="form-input" id="editSkillContent" rows="8" style="font-family: monospace;" placeholder="输入技能内容 (Markdown 格式)"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSkillEditModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveSkillChanges()">保存更改</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 通知 -->
+    <div class="toast" id="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        // ===== API 配置 =====
+        const API_BASE = '';
+
+        // ===== 状态管理 =====
+        let state = {
+            currentPage: 'dashboard',
+            stats: null,
+            bots: [],
+            tasks: [],
+            skills: [],
+            memory: null,
+            config: null,
+            ws: null
+        };
+
+        // ===== 初始化 =====
+        async function init() {
+            setupWebSocket();
+            await loadModels();
+            await loadStats();
+            await loadBots();
+            await loadTasks();
+            await loadSkills();
+            renderDashboard();
+            showToast('已连接到 Phoenix Core', 'success');
+        }
+
+        // ===== WebSocket 连接 =====
+        function setupWebSocket() {
+            const wsUrl = `ws://${window.location.host}/ws`;
+            state.ws = new WebSocket(wsUrl);
+
+            state.ws.onopen = () => {
+                console.log('WebSocket connected');
+                document.getElementById('statusDot').style.background = 'var(--neon-green)';
+                document.getElementById('statusText').textContent = '已连接';
+            };
+
+            state.ws.onclose = () => {
+                console.log('WebSocket disconnected');
+                document.getElementById('statusDot').style.background = 'var(--error)';
+                document.getElementById('statusText').textContent = '已断开';
+                // 3 秒后重连
+                setTimeout(setupWebSocket, 3000);
+            };
+
+            state.ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+        }
+
+        function handleWebSocketMessage(data) {
+            switch(data.type) {
+                case 'status_update':
+                    if (state.currentPage === 'dashboard') {
+                        updateStats(data.bots, data.task_stats);
+                    }
+                    break;
+                case 'task_created':
+                    showToast(`新任务创建：${data.title}`, 'success');
+                    loadTasks();
+                    break;
+                case 'skill_installed':
+                    showToast(`技能已安装：${data.skill_id}`, 'success');
+                    loadSkills();
+                    break;
+            }
+        }
+
+        // ===== API 调用 =====
+        async function api(url, data = null) {
+            const options = data ? {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            } : {};
+            const res = await fetch(API_BASE + url, options);
+            return res.json();
+        }
+
+        async function loadStats() {
+            try {
+                state.stats = await api('/api/stats');
+            } catch (e) {
+                console.error('加载统计失败:', e);
+            }
+        }
+
+        async function loadBots() {
+            try {
+                const res = await api('/api/bots');
+                state.bots = res.bots || [];
+            } catch (e) {
+                console.error('加载 Bot 失败:', e);
+            }
+        }
+
+        async function loadTasks() {
+            try {
+                const res = await api('/api/tasks');
+                state.tasks = res.tasks || [];
+            } catch (e) {
+                console.error('加载任务失败:', e);
+            }
+        }
+
+        async function loadSkills() {
+            try {
+                const res = await api('/api/skills');
+                state.skills = res.available || [];
+                // 保存已安装技能列表供参考
+                if (!state.stats) state.stats = {};
+                if (!state.stats.skills) state.stats.skills = {};
+                state.stats.skills.installed_list = res.installed || [];
+            } catch (e) {
+                console.error('加载技能失败:', e);
+            }
+        }
+
+        async function loadMemory() {
+            try {
+                state.memory = await api('/api/memory/stats');
+            } catch (e) {
+                console.error('加载记忆失败:', e);
+            }
+        }
+
+        async function loadConfig() {
+            try {
+                state.config = await api('/api/config');
+            } catch (e) {
+                console.error('加载配置失败:', e);
+            }
+        }
+
+        // ===== 配置向导页面 =====
+        // ===== 页面导航 =====
+        async function navigateTo(page) {
+            // 更新导航状态
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            // 隐藏所有页面
+            document.querySelectorAll('[id^="page-"]').forEach(page => {
+                page.style.display = 'none';
+            });
+
+            // 显示目标页面
+            document.getElementById(`page-${page}`).style.display = 'block';
+            document.getElementById('pageTitle').textContent = getPageTitle(page);
+
+            state.currentPage = page;
+
+            // 加载页面数据
+            switch(page) {
+                case 'dashboard':
+                    renderDashboard();
+                    break;
+                case 'bots':
+                    await loadModels();
+                    renderBotsPage();
+                    break;
+                case 'tasks':
+                    renderTasksPage();
+                    break;
+                case 'skills':
+                    renderSkillsPage();
+                    break;
+                case 'memory':
+                    renderMemoryPage();
+                    break;
+                case 'analytics':
+                    renderAnalyticsPage();
+                    break;
+                case 'settings':
+                    renderSettingsPage();
+                    break;
+                case 'devices':
+                    await loadDevices();
+                    break;
+                case 'support':
+                    break;
+                case 'chat':
+                    focusChatInput();
+                    break;
+            }
+        }
+
+        // ===== 大脑对话功能 =====
+        let chatProcessing = false;
+
+        function focusChatInput() {
+            setTimeout(() => {
+                const input = document.getElementById('chatInput');
+                if (input) input.focus();
+            }, 100);
+        }
+
+        function appendChatMessage(content, isUser = false) {
+            const container = document.getElementById('chatMessages');
+            const msg = document.createElement('div');
+            msg.style.padding = '12px 16px';
+            msg.style.marginBottom = '12px';
+            msg.style.borderRadius = '12px';
+            msg.style.fontSize = '13px';
+            msg.style.lineHeight = '1.6';
+
+            if (isUser) {
+                msg.style.background = 'rgba(139, 92, 246, 0.2)';
+                msg.style.marginLeft = 'auto';
+                msg.style.maxWidth = '80%';
+                msg.style.border = '1px solid rgba(139, 92, 246, 0.3)';
+            } else {
+                msg.style.background = 'rgba(0, 240, 255, 0.1)';
+                msg.style.borderLeft = '3px solid var(--neon-cyan)';
+            }
+
+            msg.innerHTML = content.replace(/\n/g, '<br>');
+            container.appendChild(msg);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message || chatProcessing) return;
+
+            appendChatMessage(escapeHtml(message), true);
+            input.value = '';
+            chatProcessing = true;
+            document.getElementById('sendBtn').disabled = true;
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message, user_id: 'dashboard-' + Date.now() })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    appendChatMessage(escapeHtml(data.response), false);
+                } else {
+                    appendChatMessage('⚠️ ' + escapeHtml(data.message), false);
+                }
+            } catch (error) {
+                appendChatMessage('❌ 请求失败：' + escapeHtml(error.message), false);
+            } finally {
+                chatProcessing = false;
+                document.getElementById('sendBtn').disabled = false;
+                input.focus();
+            }
+        }
+
+        function sendQuickMessage(text) {
+            document.getElementById('chatInput').value = text;
+            sendMessage();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 页面加载完成后初始化聊天输入框监听
+        function initChatListener() {
+            const input = document.getElementById('chatInput');
+            if (input) {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+            }
+        }
+
+        // 页面加载完成后调用
+        window.addEventListener('DOMContentLoaded', initChatListener);
+
+        function getPageTitle(page) {
+            const titles = {
+                'dashboard': 'Dashboard',
+                'bots': 'Bot 管理',
+                'skills': '技能库',
+                'tasks': '任务队列',
+                'memory': '记忆中心',
+                'analytics': '数据分析',
+                'settings': '系统设置',
+                'devices': '设备管理',
+                'support': '技术支持'
+            };
+            return titles[page] || page;
+        }
+
+        // ===== 渲染 Dashboard =====
+        function renderDashboard() {
+            if (!state.stats) return;
+
+            // KPI 卡片
+            document.getElementById('kpiTotalTasks').textContent = state.stats.tasks?.total || 0;
+            document.getElementById('kpiPending').textContent = state.stats.tasks?.pending || 0;
+            document.getElementById('kpiSkills').textContent = state.stats.skills?.installed || 0;
+            document.getElementById('kpiSuccessRate').textContent = (state.stats.skills?.success_rate * 100 || 0).toFixed(0) + '%';
+
+            // Bot 状态概览
+            const botGrid = document.getElementById('botGrid');
+            botGrid.innerHTML = state.bots.map(bot => `
+                <div class="bot-card">
+                    <div class="bot-header">
+                        <span class="bot-name">${getBotIcon(bot.name)} ${bot.name}</span>
+                        <span class="bot-status ${bot.status}">${bot.status === 'online' ? '●' : '○'} ${bot.status}</span>
+                    </div>
+                    <div class="bot-model">${bot.model}</div>
+                    <div class="bot-stats">
+                        <span>记忆：${bot.memory_entries || 0}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // 失败模式分析
+            const failureGrid = document.getElementById('failureGrid');
+            if (state.stats.failure_modes) {
+                failureGrid.innerHTML = state.stats.failure_modes.map(fm => `
+                    <div class="failure-card">
+                        <div class="failure-count">${fm.count}</div>
+                        <div class="failure-mode">${fm.mode}</div>
+                        <div class="failure-trend ${fm.trend < 0 ? 'down' : 'up'}">
+                            ${fm.trend < 0 ? '↓' : '→'} ${Math.abs(fm.trend)}%
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // 最近任务
+            const recentTasks = state.tasks.slice(0, 5);
+            const tbody = document.getElementById('recentTasksBody');
+            tbody.innerHTML = recentTasks.map(task => `
+                <tr>
+                    <td>#${task.id?.slice(-6) || 'N/A'}</td>
+                    <td>${task.title || '未命名任务'}</td>
+                    <td>${task.assigned_to || '未分配'}</td>
+                    <td>${getPriorityBadge(task.priority)}</td>
+                    <td><span class="status-badge ${task.status}">${task.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // ===== 渲染 Bot 页面 =====
+        function renderBotsPage() {
+            const grid = document.getElementById('botsPageGrid');
+            grid.innerHTML = state.bots.map(bot => `
+                <div class="bot-card" style="cursor: pointer;" onclick="selectBotConfig('${bot.name}')">
+                    <div class="bot-header">
+                        <span class="bot-name">${getBotIcon(bot.name)} ${bot.name}</span>
+                        <span class="bot-status ${bot.status}">${bot.status === 'online' ? '●' : '○'} ${bot.status}</span>
+                    </div>
+                    <div class="bot-model">${bot.model}</div>
+                    <div class="bot-stats">
+                        <span>记忆：${bot.memory_entries || 0}</span>
+                    </div>
+                    <div class="bot-actions">
+                        ${bot.status === 'online' ? `
+                            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); botAction('stop', '${bot.name}')">停止</button>
+                            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); botAction('restart', '${bot.name}')">重启</button>
+                        ` : `
+                            <button class="btn btn-sm btn-success" onclick="event.stopPropagation(); botAction('start', '${bot.name}')">启动</button>
+                        `}
+                        <button class="btn btn-sm" style="background: #ef4444; color: white;" onclick="event.stopPropagation(); deleteBot('${bot.name}')" title="删除 Bot">🗑️ 删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 删除 Bot
+        async function deleteBot(botName) {
+            if (!confirm(`确定要删除 Bot "${botName}" 吗？\n\n⚠️ 注意：\n- 这将删除 Bot 的工作区目录\n- 删除 Bot 的所有记忆和技能\n- 此操作不可恢复！`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/bots/${botName}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    showToast(`Bot "${botName}" 已删除`, 'success');
+                    await loadBots();
+                } else {
+                    showToast(`删除失败：${result.error}`, 'error');
+                }
+            } catch (err) {
+                showToast(`删除失败：${err.message}`, 'error');
+            }
+        }
+
+        // ===== Bot 配置和日志 =====
+        async function selectBotConfig(botName) {
+            const content = document.getElementById('botConfigContent');
+            const bot = state.bots.find(b => b.name === botName);
+            if (!bot) return;
+
+            // 加载模型列表并缓存
+            await loadModels();
+            const currentModel = await api(`/api/bots/${botName}/model`);
+
+            content.innerHTML = `
+                <div style="max-width: 800px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 16px; background: rgba(74, 158, 255, 0.05); border-radius: 8px;">
+                        <div>
+                            <div style="font-size: 18px; font-weight: 600; color: var(--neon-cyan);">${getBotIcon(botName)} ${botName}</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">当前模型：${currentModel.model || bot.model}</div>
+                        </div>
+                        <span class="bot-status ${bot.status}" style="font-size: 14px;">${bot.status === 'online' ? '● 在线' : '○ 离线'}</span>
+                    </div>
+
+                    <h4 style="margin-bottom: 16px; color: var(--neon-cyan);">🤖 模型配置</h4>
+
+                    <div style="display: grid; gap: 16px; grid-template-columns: repeat(2, 1fr);">
+                        <div>
+                            <label class="form-label" style="display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-muted);">Provider</label>
+                            <select id="botProvider" onchange="updateModelOptions('${botName}')" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);">
+                                <option value="compshare" ${(bot.provider || '').includes('compshare') ? 'selected' : ''}>CompShare ⭐ 推荐</option>
+                                <option value="coding-plan" ${(bot.provider || '').includes('coding-plan') || (bot.provider || '').includes('dashscope') || (bot.model || '').includes('qwen') ? 'selected' : ''}>通义千问 (阿里云)</option>
+                                <option value="openai" ${(bot.provider || '').includes('openai') ? 'selected' : ''}>OpenAI</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label" style="display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-muted);">模型</label>
+                            <select id="botModel" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);">
+                                ${renderModelOptions(bot.provider || 'compshare', currentModel.model || '')}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 24px; display: flex; gap: 12px;">
+                        <button class="btn btn-primary" onclick="saveBotModel('${botName}')">💾 保存模型配置</button>
+                        <button class="btn btn-secondary" onclick="loadBotModel('${botName}')">🔄 重新加载</button>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-left: 16px; align-self: center;">
+                            💡 API Key 配置请前往 <a href="#" onclick="navigateTo('settings'); showSettingsTab('api');" style="color: var(--neon-blue);">系统设置 → API Keys</a>
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 缓存的模型列表
+        let cachedModels = { compshare: [], dashscope: [], openai: [] };
+
+        // 加载模型列表
+        async function loadModels() {
+            try {
+                const data = await api('/api/models');
+                cachedModels = data.models || { compshare: [], dashscope: [], openai: [] };
+            } catch (e) {
+                console.error('加载模型列表失败:', e);
+            }
+        }
+
+        // ===== 设备管理 =====
+        async function loadDevices() {
+            try {
+                const res = await fetch('/api/remote-devices');
+                const data = await res.json();
+                renderDevices(data);
+            } catch (e) {
+                console.error('加载设备列表失败:', e);
+                document.getElementById('devicesContent').innerHTML = `
+                    <div style="padding: 40px; text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
+                        <div style="color: var(--text-muted);">加载失败</div>
+                        <div style="font-size: 13px; margin-top: 8px;">${e.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderDevices(data) {
+            const container = document.getElementById('devicesContent');
+            const devices = data.online || {};
+            const deviceList = Object.values(devices);
+
+            if (deviceList.length === 0) {
+                container.innerHTML = `
+                    <div style="padding: 60px 20px; text-align: center;">
+                        <div style="font-size: 64px; margin-bottom: 16px;">📡</div>
+                        <div style="font-size: 18px; margin-bottom: 8px;">暂无在线设备</div>
+                        <div style="color: var(--text-muted); font-size: 14px;">
+                            远程设备需要配置 DEBUG_MASTER_URL 和 DEBUG_DEVICE_ID 才能连接到此服务器
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div style="display: grid; gap: 16px;">
+                    ${deviceList.map(device => `
+                        <div class="device-card" style="background: var(--bg-card); border-radius: 8px; padding: 20px; border: 1px solid rgba(0, 240, 255, 0.1);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <div style="font-size: 18px; font-weight: 600;">🖥️ ${device.device_id}</div>
+                                <div style="padding: 4px 12px; border-radius: 12px; font-size: 12px; background: rgba(0, 255, 136, 0.1); color: var(--neon-green);">● 在线</div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                                <div>主机：${device.device_info?.hostname || '-'}</div>
+                                <div>模型：${device.device_info?.default_model || '-'}</div>
+                                <div>连接：${new Date(device.connected_at).toLocaleString('zh-CN')}</div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-primary" onclick="showDeviceDetails('${device.device_id}')">查看详情</button>
+                                <button class="btn btn-secondary" onclick="sendCommand('${device.device_id}')">发送命令</button>
+                                <button class="btn btn-secondary" onclick="pushCode('${device.device_id}')">推送代码</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        async function showDeviceDetails(deviceId) {
+            try {
+                const [deviceRes, logsRes] = await Promise.all([
+                    fetch(`/api/remote-devices/${deviceId}`),
+                    fetch(`/api/remote-devices/${deviceId}/logs?limit=50`)
+                ]);
+
+                const device = await deviceRes.json();
+                const logs = await logsRes.json();
+
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;justify-content:center;align-items:center;z-index:1000;';
+                modal.innerHTML = `
+                    <div style="background: var(--bg-secondary); border-radius: 12px; padding: 24px; max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto; border: 1px solid var(--neon-cyan);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h2 style="font-size: 20px;">设备：${deviceId}</h2>
+                            <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; color: var(--text-primary); font-size: 24px; cursor: pointer;">×</button>
+                        </div>
+                        <div style="margin-bottom: 24px;">
+                            <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--neon-cyan);">设备信息</h3>
+                            <pre style="background: #000; padding: 12px; border-radius: 6px; font-size: 12px; overflow-x: auto;">${JSON.stringify(device, null, 2)}</pre>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--neon-cyan);">最近日志</h3>
+                            <div style="background: #000; border-radius: 6px; padding: 12px; max-height: 300px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 12px;">
+                                ${logs.logs?.map(log => `<div style="padding: 4px 8px; border-bottom: 1px solid #222; color: ${log.level === 'error' ? '#ef4444' : log.level === 'warning' ? '#f59e0b' : '#4a9eff'};">[${log.timestamp?.slice(11, 19) || ''}] ${log.message || JSON.stringify(log)}</div>`).join('') || '<div style="color: #666;">暂无日志</div>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+            } catch (err) {
+                alert('加载失败：' + err.message);
+            }
+        }
+
+        async function sendCommand(deviceId) {
+            const command = prompt('输入命令 (restart, reload_config, get_status, get_logs):');
+            if (!command) return;
+
+            try {
+                const res = await fetch(`/api/remote-devices/${deviceId}/command`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command, args: {} })
+                });
+                const result = await res.json();
+                alert(result.message || JSON.stringify(result));
+            } catch (err) {
+                alert('发送失败：' + err.message);
+            }
+        }
+
+        async function pushCode(deviceId) {
+            const filePath = prompt('输入要推送的文件路径 (相对于 phoenix-core):');
+            if (!filePath) return;
+
+            // 读取本地文件内容
+            const fullUrl = `/read_file?path=${encodeURIComponent(filePath)}`;
+            const res = await fetch(fullUrl);
+            if (!res.ok) {
+                alert('读取文件失败：' + res.statusText);
+                return;
+            }
+            const content = await res.text();
+
+            try {
+                const pushRes = await fetch(`/api/remote-devices/${deviceId}/push_code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ files: [{ path: filePath, content }] })
+                });
+                const result = await pushRes.json();
+                alert(result.message || '推送成功');
+            } catch (err) {
+                alert('推送失败：' + err.message);
+            }
+        }
+
+        async function loadBotModel(botName) {
+            const list = cachedModels[provider] || cachedModels.compshare;
+            if (list.length === 0) {
+                return '<option value="">加载中...</option>';
+            }
+            return list.map(m => `<option value="${m.id}" ${currentModel === m.id ? 'selected' : ''}>${m.name || m.id}</option>`).join('');
+        }
+
+        async function updateModelOptions(botName) {
+            const provider = document.getElementById('botProvider').value;
+            const select = document.getElementById('botModel');
+
+            // 重新加载模型列表以确保是最新的
+            await loadModels();
+
+            select.innerHTML = renderModelOptions(provider, '');
+        }
+
+        async function loadBotModel(botName) {
+            const result = await api(`/api/bots/${botName}/model`);
+            showToast(`当前模型：${result.model}`, 'success');
+            selectBotConfig(botName);
+        }
+
+        async function saveBotModel(botName) {
+            const provider = document.getElementById('botProvider').value;
+            const model = document.getElementById('botModel').value;
+
+            const result = await api(`/api/bots/${botName}/model`, {
+                model: model,
+                provider: provider
+            });
+
+            if (result.success) {
+                showToast(`Bot ${botName} 模型已切换为 ${model}`, 'success');
+                await loadBots();
+                renderBotsPage();
+            } else {
+                showToast(`切换失败：${result.error}`, 'error');
+            }
+        }
+
+        async function loadBotLogs() {
+            const botName = document.getElementById('botLogSelect').value;
+            if (!botName) {
+                document.getElementById('botLogsContent').innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 40px;">选择 Bot 查看日志</div>';
+                return;
+            }
+
+            try {
+                const res = await fetch(API_BASE + `/api/bots/logs?bot_name=${encodeURIComponent(botName)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const logs = data.logs || [];
+                    document.getElementById('botLogsContent').innerHTML = logs.map(line => `
+                        <div style="color: ${line.includes('ERROR') ? '#ef4444' : line.includes('WARNING') ? '#f59e0b' : '#a5b4fc'};">
+                            ${line}
+                        </div>
+                    `).join('');
+                } else {
+                    document.getElementById('botLogsContent').innerHTML = '<div style="color: var(--error);">日志加载失败</div>';
+                }
+            } catch (e) {
+                document.getElementById('botLogsContent').innerHTML = '<div style="color: var(--error);">日志加载失败</div>';
+            }
+        }
+
+        function saveBotConfig(botName) {
+            showToast(`${botName} 配置已保存`, 'success');
+        }
+
+        function resetBotConfig(botName) {
+            showToast(`${botName} 配置已重置`, 'success');
+        }
+
+        // ===== 渲染任务页面 =====
+        function renderTasksPage() {
+            const tbody = document.getElementById('tasksBody');
+            tbody.innerHTML = state.tasks.map(task => `
+                <tr>
+                    <td>#${task.id?.slice(-6) || 'N/A'}</td>
+                    <td>${task.title || '未命名'}</td>
+                    <td>${task.description?.slice(0, 30) || ''}...</td>
+                    <td>${task.assigned_to || '未分配'}</td>
+                    <td>${getPriorityBadge(task.priority)}</td>
+                    <td><span class="status-badge ${task.status}">${task.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="viewTask('${task.id}')">查看</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteTask('${task.id}')" style="margin-left: 4px;">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 快速删除任务函数
+        async function deleteTask(id) {
+            if (!confirm('确定要删除这个任务吗？')) return;
+            try {
+                const res = await fetch(API_BASE + `/api/tasks/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showToast('任务已删除', 'success');
+                    await loadTasks();
+                    renderTasksPage();
+                } else {
+                    showToast(`删除失败：${result.error || '未知错误'}`, 'error');
+                }
+            } catch (e) {
+                showToast(`删除失败：${e.message}`, 'error');
+            }
+        }
+
+        // ===== 渲染技能页面 =====
+        function renderSkillsPage(skillsToRender = null) {
+            const list = document.getElementById('skillsList');
+            const installedSet = new Set(state.stats?.skills?.installed_list || []);
+            const skills = skillsToRender || state.skills || [];
+
+            if (skills && skills.length > 0) {
+                list.innerHTML = skills.map(skill => {
+                    const skillId = (skill.id || skill.name || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                    const category = skill.category || 'other';
+                    const status = skill.status || 'pending';
+                    const stars = skill.github_stats?.stars || 0;
+                    const statusBg = status === 'active' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(139, 92, 246, 0.2)';
+                    const statusColor = status === 'active' ? 'var(--success)' : 'var(--neon-purple)';
+                    const statusText = status === 'active' ? '✅ 已激活' : '⏳ 待审核';
+
+                    return `<div class="card" style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                    <span style="font-weight: 600;">${skill.name || skill.id || '未命名技能'}</span>
+                                    <span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: ${statusBg}; color: ${statusColor};">${statusText}</span>
+                                    ${stars > 0 ? '<span style="font-size: 11px; color: var(--text-muted);">⭐ ' + stars + '</span>' : ''}
+                                </div>
+                                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">${skill.description || '无描述'}</div>
+                                <div style="font-size: 11px; color: var(--text-muted);">📁 ${getCategoryName(category)} • ${skill.source || '未知来源'} • 标签：${((skill.tags || []).slice(0, 3).join(', ') || '无')}</div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-sm btn-secondary" onclick="viewSkill('${skillId}')">查看</button>
+                                ${status === 'active' ? `<button class="btn btn-sm btn-success" disabled>已激活</button>` : `<button class="btn btn-sm btn-primary" onclick="activateSkill('${skill.id || skill.name}')">激活</button>`}
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+            } else {
+                // 显示已安装技能（当 skill_marketplace 返回空时）
+                const installedSkills = state.stats?.skills?.installed_list || [];
+                if (installedSkills.length > 0) {
+                    list.innerHTML = installedSkills.map(skillId => {
+                        const safeId = skillId.replace(/'/g, "\\'").replace(/"/g, '\\"');
+                        return `
+                        <div class="card" style="margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 600; margin-bottom: 4px;">📦 ${skillId}</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">已安装技能</div>
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-secondary" onclick="viewSkill('${safeId}')">查看</button>
+                                    <button class="btn btn-sm btn-danger" onclick="uninstallSkill('${safeId}')">卸载</button>
+                                </div>
+                            </div>
+                        </div>
+                    `}).join('');
+                } else {
+                    list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">暂无技能</div>';
+                }
+            }
+        }
+
+        // ===== 渲染记忆页面 =====
+        async function renderMemoryPage() {
+            await loadMemory();
+            if (!state.memory) return;
+
+            // 显示 Discord 聊天记录数（真正的共享记忆）
+            document.getElementById('memoryShared').textContent = state.memory.memory?.shared_entries || 0;
+            document.getElementById('memoryPrivate').textContent = state.memory.memory?.private_entries || 0;
+            document.getElementById('memorySessions').textContent = state.memory.sessions?.total_sessions || 0;
+            document.getElementById('memoryBotTotal').textContent = state.memory.memory?.bot_memory_entries || 0;
+
+            // 显示记忆监控状态
+            renderMemoryMonitoring();
+
+            // 渲染共享记忆浏览
+            await renderSharedMemoryContent();
+
+            // 渲染 Bot 工作区记忆
+            renderBotMemoryContent();
+        }
+
+        // 渲染记忆监控
+        function renderMemoryMonitoring() {
+            const monitoring = state.memory.memory?.monitoring || {};
+            const discordDays = state.memory.memory?.discord_days || 0;
+
+            const statusDiv = document.getElementById('memoryMonitoringStatus');
+            if (statusDiv) {
+                const isLoss = monitoring.memory_loss_detected;
+                statusDiv.innerHTML = `
+                    <div style="padding: 12px; margin: 8px 0; background: ${isLoss ? 'rgba(239, 68, 68, 0.1)' : 'rgba(0, 255, 136, 0.1)'}; border-radius: 8px; border-left: 3px solid ${isLoss ? 'var(--error)' : 'var(--neon-green)'};">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-size: 13px;">
+                                ${isLoss ? '⚠️ 可能存在记忆丢失' : '✅ 记忆同步正常'}
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-muted);">
+                                最后同步：${monitoring.last_sync_date || '未知'} • 共 ${discordDays} 天
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // 一键修复记忆问题
+        async function repairMemory() {
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ 修复中...';
+            btn.disabled = true;
+
+            const logDiv = document.getElementById('memoryRepairLog');
+            if (logDiv) {
+                logDiv.style.display = 'block';
+                logDiv.innerHTML = '<div style="padding: 12px; background: rgba(74, 158, 255, 0.1); border-radius: 8px;">🔄 开始修复...</div>';
+            }
+
+            try {
+                const res = await fetch(API_BASE + '/api/memory/repair', {
+                    method: 'POST'
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    let logHtml = '<div style="padding: 12px; background: rgba(0, 255, 136, 0.1); border-radius: 8px; margin-top: 12px;">✅ 修复完成</div>';
+                    logHtml += '<div style="padding: 12px; background: rgba(0, 0, 0, 0.3); border-radius: 8px; margin-top: 8px; font-family: monospace; font-size: 12px; white-space: pre-wrap; max-height: 300px; overflow-y: auto;">';
+                    logHtml += result.log.join('\n');
+                    logHtml += '</div>';
+                    logHtml += `<div style="padding: 8px; margin-top: 8px; font-size: 12px; color: var(--neon-cyan);">成功操作：${result.stats.success_count} • 在线 Bot: ${result.stats.running_bots}/${result.stats.total_bots}</div>`;
+
+                    if (logDiv) {
+                        logDiv.innerHTML = logHtml;
+                    }
+
+                    showToast('记忆修复完成', 'success');
+
+                    // 刷新记忆统计数据
+                    await loadMemoryStats();
+                } else {
+                    if (logDiv) {
+                        logDiv.innerHTML = `<div style="padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">❌ 修复失败：${result.error}</div>`;
+                    }
+                    showToast('修复失败', 'error');
+                }
+            } catch (e) {
+                if (logDiv) {
+                    logDiv.innerHTML = `<div style="padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;">❌ 修复失败：${e.message}</div>`;
+                }
+                showToast(`修复失败：${e.message}`, 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // 加载记忆统计
+        async function loadMemoryStats() {
+            try {
+                const res = await fetch(API_BASE + '/api/memory/stats');
+                const data = await res.json();
+                state.memory = data;
+                renderMemoryMonitoring();
+                renderMemoryPage();
+            } catch (e) {
+                console.error('加载记忆统计失败:', e);
+            }
+        }
+
+        // 渲染共享记忆内容
+        async function renderSharedMemoryContent() {
+            const content = document.getElementById('sharedMemoryContent');
+            try {
+                const res = await fetch(API_BASE + '/api/memory/shared');
+                const data = await res.json();
+                const entries = data.entries || [];
+
+                if (entries.length > 0) {
+                    content.innerHTML = `
+                        <div style="padding: 12px; margin-bottom: 16px; background: rgba(0, 240, 255, 0.05); border-radius: 8px; border-left: 3px solid var(--neon-cyan);">
+                            <div style="font-size: 13px; color: var(--neon-cyan);">
+                                📊 已导入 <strong>${data.total_messages || 0}</strong> 条 Discord 消息，共 <strong>${entries.length}</strong> 天的记录
+                            </div>
+                        </div>
+                    ` + entries.map((entry, index) => `
+                        <div style="padding: 16px; margin: 8px 0; background: rgba(74, 158, 255, 0.05); border-radius: 8px; border-left: 3px solid var(--neon-blue);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div style="font-size: 14px; font-weight: 600; color: var(--neon-cyan);">📅 ${entry.date}</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">${entry.message_count} 条消息</div>
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">${entry.title}</div>
+                            <div style="white-space: pre-wrap; font-size: 12px; line-height: 1.5; color: var(--text-muted); max-height: 150px; overflow-y: auto;">
+                                ${escapeHtml(entry.preview)}...
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    content.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">暂无 Discord 聊天记录</div>';
+                }
+            } catch (e) {
+                console.error('加载共享记忆失败:', e);
+                content.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--error);">加载失败</div>';
+            }
+        }
+
+        // 渲染 Bot 工作区记忆
+        function renderBotMemoryContent() {
+            const content = document.getElementById('botMemoryContent');
+            const botDetails = state.memory.memory?.bot_details || [];
+
+            if (botDetails.length > 0) {
+                content.innerHTML = botDetails.map(bot => `
+                    <div style="padding: 16px; margin: 8px 0; background: rgba(74, 158, 255, 0.05); border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div style="font-size: 16px; font-weight: 600; color: var(--neon-cyan);">${bot.bot}</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">${bot.entries} 条目 • ${(bot.size/1024).toFixed(1)}KB</div>
+                        </div>
+                        <div style="font-size: 13px; color: var(--text-muted);">
+                            工作区记忆：${bot.bot} 岗位私有记忆，包含直播数据、用户画像、流量密码等核心记忆
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                content.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">暂无 Bot 工作区记忆</div>';
+            }
+        }
+
+        // ===== 渲染设置页面 =====
+        let currentSettingsTab = 'api';
+
+        function showSettingsTab(tabName) {
+            currentSettingsTab = tabName;
+            // 隐藏所有 tab
+            document.querySelectorAll('.settings-tab').forEach(el => el.style.display = 'none');
+            // 显示选中 tab
+            document.getElementById(`settings-${tabName}`).style.display = 'block';
+            // 更新按钮状态
+            document.querySelectorAll('.card-header .btn').forEach(btn => {
+                btn.className = btn.className.replace('btn-primary', 'btn-secondary');
+            });
+            event.target.className = event.target.className.replace('btn-secondary', 'btn-primary');
+            // 渲染内容
+            renderSettingsContent(tabName);
+        }
+
+        async function renderSettingsPage() {
+            await loadConfig();
+            await loadSystemInfo();
+            renderSettingsContent(currentSettingsTab);
+        }
+
+        function renderSettingsContent(tabName) {
+            switch(tabName) {
+                case 'api':
+                    renderApiKeys();
+                    break;
+                case 'discord':
+                    renderDiscordConfig();
+                    break;
+                case 'storage':
+                    renderStorageConfig();
+                    break;
+                case 'network':
+                    renderNetworkConfig();
+                    break;
+                case 'system':
+                    renderSystemInfo();
+                    break;
+            }
+        }
+
+        async function renderApiKeys() {
+            const content = document.getElementById('apiKeysContent');
+            const config = state.config?.config || {};
+
+            // 从 API 获取 provider 配置和模型列表
+            let providersConfig = {};
+            let modelsData = {};
+            let subscribedModels = {};
+            let allPlatformModels = {};
+            try {
+                // 获取 provider 配置
+                const providersRes = await api('/api/providers');
+                providersConfig = providersRes.providers || {};
+
+                // 获取模型列表和订阅状态
+                const data = await api('/api/models');
+                modelsData = data.models || {};
+                subscribedModels = data.subscribed || {};
+
+                // 获取平台所有模型（用于选择订阅）
+                const allData = await api('/api/all-models');
+                allPlatformModels = allData.models || {};
+            } catch (e) {
+                console.error('获取模型列表失败:', e);
+            }
+
+            // 构建 Provider 配置数组
+            const providers = Object.entries(providersConfig).map(([id, info]) => {
+                const apiKeyEnv = info.api_key_env || `${id.toUpperCase().replace('-', '_')}_API_KEY`;
+                const apiKey = config[apiKeyEnv] || '';
+                return {
+                    id: id,
+                    name: info.name || id,
+                    defaultUrl: info.base_url || '',
+                    models: modelsData[id] || [],
+                    allModels: allPlatformModels[id] || [],
+                    keyEnv: apiKeyEnv,
+                    subscribed: subscribedModels[id] || [],
+                    apiKey: apiKey
+                };
+            });
+
+            content.innerHTML = `
+                <div style="max-width: 900px;">
+                    <div style="padding: 16px; background: rgba(74, 158, 255, 0.1); border-radius: 8px; margin-bottom: 24px;">
+                        <div style="font-weight: 600; color: var(--neon-cyan); margin-bottom: 8px;">🔑 API 配置说明</div>
+                        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+                            每个 Provider 需要配置：API Base URL、API Key。
+                            模型列表会自动从 API 获取。配置后可在 Bot 管理中为每个 Bot 选择不同的模型。
+                        </p>
+                    </div>
+
+                    ${providers.map(provider => {
+                        const apiKey = provider.apiKey;
+                        const isSet = apiKey && apiKey.length > 4;
+                        const modelOptions = provider.models.length > 0
+                            ? provider.models.map(m => `<option value="${m.id}">${m.name || m.id}</option>`).join('')
+                            : '<option value="">加载中...</option>';
+                        const subscribedCount = provider.subscribed.length;
+                        const totalModels = provider.allModels.length;
+
+                        return `
+                            <div class="card" style="margin-bottom: 16px;">
+                                <div class="card-header">
+                                    <div class="card-title">🤖 ${provider.name}</div>
+                                    <span style="color: ${isSet ? 'var(--success)' : 'var(--error)'}; font-size: 12px;">
+                                        ${isSet ? '● 已配置' : '○ 未配置'}
+                                    </span>
+                                </div>
+                                <div class="card-body">
+                                    <div style="display: grid; gap: 16px; margin-bottom: 16px;">
+                                        <div>
+                                            <label class="form-label" style="font-size: 12px;">API Base URL</label>
+                                            <input type="text" id="${provider.id}_url"
+                                                value="${config[provider.id.toUpperCase().replace('-', '_') + '_URL'] || provider.defaultUrl}"
+                                                style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--bg-hover); background: var(--bg-secondary); color: var(--text-primary); font-size: 13px;">
+                                        </div>
+                                        <div>
+                                            <label class="form-label" style="font-size: 12px;">默认模型 ID</label>
+                                            <select id="${provider.id}_model"
+                                                style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--bg-hover); background: var(--bg-secondary); color: var(--text-primary); font-size: 13px;">
+                                                ${modelOptions}
+                                            </select>
+                                            ${provider.models.length > 0 ? `<p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">可用 ${provider.models.length} 个模型</p>` : ''}
+                                        </div>
+                                        <div>
+                                            <label class="form-label" style="font-size: 12px;">API Key</label>
+                                            <div style="display: flex; gap: 8px;">
+                                                <input type="password" id="${provider.id}_key"
+                                                    value="${apiKey}"
+                                                    placeholder="输入 API Key"
+                                                    style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--bg-hover); background: var(--bg-secondary); color: var(--text-primary); font-size: 13px;">
+                                                <button class="btn btn-secondary" onclick="testApiKey('${provider.id}')" style="padding: 8px 16px; font-size: 13px; white-space: nowrap;">🔍 验证</button>
+                                                ${isSet ? `<button class="btn btn-danger" onclick="deleteApiKey('${provider.id}', '${provider.keyEnv}')" style="padding: 8px 16px; font-size: 13px; white-space: nowrap;">🗑️ 删除</button>` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 8px; margin-top: 16px;">
+                                        <button class="btn btn-primary" onclick="saveProviderConfig('${provider.id}')" style="padding: 8px 24px; font-size: 13px;">💾 保存配置</button>
+                                        <button class="btn btn-secondary" onclick="openSubscribeModal('${provider.id}', ${JSON.stringify(provider.allModels).replace(/"/g, '&quot;')}, ${JSON.stringify(provider.subscribed).replace(/"/g, '&quot;')})" style="padding: 8px 24px; font-size: 13px;">📋 管理订阅模型 (${subscribedCount}/${totalModels})</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        async function saveProviderConfig(providerId) {
+            const url = document.getElementById(`${providerId}_url`).value;
+            const model = document.getElementById(`${providerId}_model`).value;
+            const apiKey = document.getElementById(`${providerId}_key`).value;
+
+            // 将 providerId 中的 - 替换为 _，保证键名一致
+            const envPrefix = providerId.toUpperCase().replace('-', '_');
+
+            const result = await api('/api/config', {
+                [envPrefix + '_URL']: url,
+                [envPrefix + '_MODEL']: model,
+                [envPrefix + '_API_KEY']: apiKey
+            });
+
+            if (result.success) {
+                showToast(`${providerId} 配置已保存`, 'success');
+                await loadConfig();
+                renderApiKeys();
+            } else {
+                showToast(`保存失败：${result.error}`, 'error');
+            }
+        }
+
+        async function testApiKey(providerId) {
+            const apiKey = document.getElementById(`${providerId}_key`).value;
+            if (!apiKey) {
+                showToast('请先输入 API Key', 'warning');
+                return;
+            }
+
+            const result = await api('/api/config/test-api-key', {
+                provider: providerId,
+                api_key: apiKey
+            });
+
+            if (result.success) {
+                showToast('✅ API Key 有效', 'success');
+            } else {
+                showToast(`❌ 验证失败：${result.error}`, 'error');
+            }
+        }
+
+        async function deleteApiKey(providerId, keyEnv) {
+            if (!confirm(`确定要删除 ${providerId} 的 API Key 吗？\\n\\n环境变量名：${keyEnv}\\n\\n删除后需要重新配置才能使用该服务。`)) {
+                return;
+            }
+
+            const result = await api('/api/config/delete-key', {
+                key: keyEnv
+            });
+
+            if (result.success) {
+                showToast(`已删除 ${keyEnv}`, 'success');
+                await loadConfig();
+                renderApiKeys();
+            } else {
+                showToast(`删除失败：${result.error}`, 'error');
+            }
+        }
+
+        async function testProviderConnection(providerId) {
+            showToast('正在测试连接...', 'success');
+            // 这里可以调用 API 测试连接
+            setTimeout(() => {
+                showToast('连接测试成功', 'success');
+            }, 1000);
+        }
+
+        // 订阅模型管理
+        function openSubscribeModal(providerId, allModels, subscribed) {
+            const modal = document.getElementById('subscribeModal');
+            const title = document.getElementById('subscribeModalTitle');
+            const content = document.getElementById('subscribeModalContent');
+
+            title.textContent = `管理订阅模型 - ${providerId.toUpperCase()}`;
+
+            // 生成模型列表
+            const modelListHtml = allModels.map(model => {
+                const isChecked = subscribed.includes(model.id) ? 'checked' : '';
+                return `
+                    <label style="display: flex; align-items: center; padding: 8px; border-radius: 4px; cursor: pointer; hover: background: var(--bg-hover);">
+                        <input type="checkbox" value="${model.id}" ${isChecked} style="margin-right: 8px;">
+                        <span style="font-size: 13px;">${model.name || model.id}</span>
+                    </label>
+                `;
+            }).join('');
+
+            content.innerHTML = `
+                <div style="max-height: 400px; overflow-y: auto; padding: 8px;">
+                    <div style="margin-bottom: 12px;">
+                        <button onclick="selectAllModels()" style="margin-right: 8px; font-size: 12px;">全选</button>
+                        <button onclick="deselectAllModels()" style="font-size: 12px;">取消全选</button>
+                    </div>
+                    ${modelListHtml}
+                </div>
+            `;
+
+            modal.style.display = 'block';
+            modal.dataset.providerId = providerId;
+        }
+
+        function closeSubscribeModal() {
+            const modal = document.getElementById('subscribeModal');
+            modal.style.display = 'none';
+        }
+
+        function selectAllModels() {
+            const modal = document.getElementById('subscribeModal');
+            const checkboxes = modal.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = true);
+        }
+
+        function deselectAllModels() {
+            const modal = document.getElementById('subscribeModal');
+            const checkboxes = modal.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+        }
+
+        async function saveSubscribedModels() {
+            const modal = document.getElementById('subscribeModal');
+            const providerId = modal.dataset.providerId;
+            const checkboxes = modal.querySelectorAll('input[type="checkbox"]:checked');
+            const selectedModels = Array.from(checkboxes).map(cb => cb.value);
+
+            const payload = {};
+            if (providerId === 'compshare') {
+                payload.compshare = selectedModels;
+            } else if (providerId === 'dashscope') {
+                payload.dashscope = selectedModels;
+            } else if (providerId === 'openai') {
+                payload.openai = selectedModels;
+            }
+
+            const result = await api('/api/subscribed-models', payload);
+
+            if (result.success) {
+                showToast(`已保存 ${selectedModels.length} 个订阅模型`, 'success');
+                closeSubscribeModal();
+                renderApiKeys();
+            } else {
+                showToast(`保存失败：${result.error}`, 'error');
+            }
+        }
+
+        function renderDiscordConfig() {
+            const content = document.getElementById('discordContent');
+            const config = state.config?.config || {};
+
+            content.innerHTML = `
+                <div style="max-width: 600px;">
+                    <div style="margin-bottom: 16px;">
+                        <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 600;">Discord Server ID</label>
+                        <input type="text" class="form-input" value="${config.DISCORD_SERVER_ID || ''}"
+                               style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);"
+                               onchange="updateDiscordConfig('DISCORD_SERVER_ID', this.value)">
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 600;">Discord Channel ID</label>
+                        <input type="text" class="form-input" value="${config.DISCORD_CHANNEL_ID || ''}"
+                               style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);"
+                               onchange="updateDiscordConfig('DISCORD_CHANNEL_ID', this.value)">
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 600;">Proxy 设置</label>
+                        <div style="display: grid; gap: 12px; grid-template-columns: 1fr 1fr;">
+                            <input type="text" class="form-input" placeholder="HTTP Proxy" value="${config.HTTP_PROXY || ''}"
+                                   style="padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);"
+                                   onchange="updateDiscordConfig('HTTP_PROXY', this.value)">
+                            <input type="text" class="form-input" placeholder="HTTPS Proxy" value="${config.HTTPS_PROXY || ''}"
+                                   style="padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);"
+                                   onchange="updateDiscordConfig('HTTPS_PROXY', this.value)">
+                        </div>
+                    </div>
+                    <div style="margin-top: 24px; padding: 16px; background: rgba(0, 240, 255, 0.05); border-radius: 8px;">
+                        <div style="font-size: 13px; color: var(--neon-cyan); margin-bottom: 8px;">💡 提示</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">
+                            Discord Server ID 和 Channel ID 可通过在 Discord 中右键点击服务器/频道并选择"复制 ID"获取。
+                            需要先在 Discord 用户设置 > 高级中开启开发者模式。
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStorageConfig() {
+            const content = document.getElementById('storageContent');
+
+            content.innerHTML = `
+                <div style="max-width: 600px;">
+                    <div style="margin-bottom: 16px;">
+                        <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 600;">数据目录</label>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <input type="text" class="form-input" value="/Users/wangsai/phoenix-core" readonly
+                                   style="flex: 1; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-muted);">
+                        </div>
+                    </div>
+
+                    <h4 style="margin: 24px 0 12px; color: var(--neon-cyan);">存储路径</h4>
+
+                    <div style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; padding: 12px; background: rgba(74, 158, 255, 0.05); border-radius: 8px;">
+                            <span>Bot 工作区</span>
+                            <span style="color: var(--text-muted); font-family: monospace;">workspaces/{bot}/</span>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; padding: 12px; background: rgba(74, 158, 255, 0.05); border-radius: 8px;">
+                            <span>共享记忆</span>
+                            <span style="color: var(--text-muted); font-family: monospace;">shared_memory/logs/</span>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; padding: 12px; background: rgba(74, 158, 255, 0.05); border-radius: 8px;">
+                            <span>技能库</span>
+                            <span style="color: var(--text-muted); font-family: monospace;">skills/</span>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; padding: 12px; background: rgba(74, 158, 255, 0.05); border-radius: 8px;">
+                            <span>备份目录</span>
+                            <span style="color: var(--text-muted); font-family: monospace;">backups/</span>
+                        </div>
+                    </div>
+
+                    <h4 style="margin: 24px 0 12px; color: var(--neon-cyan);">自动清理</h4>
+                    <div style="margin-bottom: 12px;">
+                        <label class="form-label" style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" checked onchange="toggleAutoDedup(this.checked)">
+                            <span>启用记忆自动去重 (每天凌晨 3 点)</span>
+                        </label>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderNetworkConfig() {
+            const content = document.getElementById('networkContent');
+            const config = state.config?.config || {};
+
+            content.innerHTML = `
+                <div style="max-width: 600px;">
+                    <div style="margin-bottom: 16px;">
+                        <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 600;">API 服务器端口</label>
+                        <input type="number" class="form-input" value="8000"
+                               style="width: 150px; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);"
+                               onchange="updateNetworkConfig('port', this.value)">
+                        <div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">
+                            修改后需要重启 API 服务器
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 600;">默认 Provider</label>
+                        <select class="form-select" value="${config.DEFAULT_PROVIDER || 'coding-plan'}"
+                                style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);"
+                                onchange="updateNetworkConfig('provider', this.value)">
+                            <option value="coding-plan">CodingPlan (Qwen)</option>
+                            <option value="dashscope">阿里云 DashScope</option>
+                            <option value="moonshot">Moonshot</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 600;">默认模型</label>
+                        <input type="text" class="form-input" value="${config.DEFAULT_MODEL || 'qwen3.6-plus'}"
+                               style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary);"
+                               onchange="updateNetworkConfig('model', this.value)">
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadSystemInfo() {
+            try {
+                const res = await fetch(API_BASE + '/api/system/info');
+                if (res.ok) {
+                    state.systemInfo = await res.json();
+                }
+            } catch (e) {
+                // 可选的系统信息加载
+            }
+        }
+
+        function renderSystemInfo() {
+            const content = document.getElementById('systemContent');
+            const info = state.systemInfo || {};
+
+            content.innerHTML = `
+                <div style="max-width: 800px;">
+                    <h4 style="margin-bottom: 16px; color: var(--neon-cyan);">系统状态</h4>
+
+                    <div style="display: grid; gap: 12px; grid-template-columns: repeat(2, 1fr); margin-bottom: 24px;">
+                        <div style="padding: 16px; background: rgba(74, 158, 255, 0.05); border-radius: 8px;">
+                            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">运行时间</div>
+                            <div style="font-size: 18px; font-weight: 600;">${info.uptime || 'N/A'}</div>
+                        </div>
+                        <div style="padding: 16px; background: rgba(74, 158, 255, 0.05); border-radius: 8px;">
+                            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Python 版本</div>
+                            <div style="font-size: 18px; font-weight: 600;">${info.python_version || 'N/A'}</div>
+                        </div>
+                        <div style="padding: 16px; background: rgba(74, 158, 255, 0.05); border-radius: 8px;">
+                            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Dashboard 版本</div>
+                            <div style="font-size: 18px; font-weight: 600;">v5.0</div>
+                        </div>
+                        <div style="padding: 16px; background: rgba(74, 158, 255, 0.05); border-radius: 8px;">
+                            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">项目目录</div>
+                            <div style="font-size: 14px; font-weight: 600; font-family: monospace; word-break: break-all;">/Users/wangsai/phoenix-core</div>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-bottom: 16px; color: var(--neon-cyan);">Bot 状态</h4>
+                    <div style="display: grid; gap: 8px;">
+                        ${(state.bots || []).map(bot => `
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(74, 158, 255, 0.05); border-radius: 8px;">
+                                <div>
+                                    <span style="font-weight: 600;">🤖 ${bot.name}</span>
+                                    <span style="margin-left: 12px; font-size: 12px; color: var(--text-muted);">${bot.model}</span>
+                                </div>
+                                <span style="color: ${bot.status === 'online' ? 'var(--success)' : 'var(--error)'};">
+                                    ${bot.status === 'online' ? '● 在线' : '○ 离线'}
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== 配置操作 =====
+        async function updateDiscordConfig(key, value) {
+            try {
+                await fetch(API_BASE + '/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [key]: value })
+                });
+                showToast(`${key} 已更新`, 'success');
+            } catch (e) {
+                showToast(`更新失败：${e.message}`, 'error');
+            }
+        }
+
+        async function updateNetworkConfig(key, value) {
+            showToast(`${key} 已更新，重启后生效`, 'success');
+        }
+
+        function editApiKey(key) {
+            const currentValue = state.config?.config?.[key] || '';
+            const newValue = prompt(`请输入 ${key} 的新值:`, currentValue);
+            if (newValue && newValue !== currentValue) {
+                updateConfigValue(key, newValue);
+            }
+        }
+
+        function editBotToken(botName) {
+            const newValue = prompt(`请输入 ${botName} 的新 Token:`, '当前已配置');
+            if (newValue && newValue !== '当前已配置') {
+                // 更新 Bot Token 需要修改 BOTS_CONFIG JSON
+                showToast('请在 .env 文件中手动修改 Bot Token', 'info');
+            }
+        }
+
+        async function updateConfigValue(key, value) {
+            try {
+                await fetch(API_BASE + '/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [key]: value })
+                });
+                showToast(`${key} 已更新`, 'success');
+                await loadConfig();
+                renderSettingsContent(currentSettingsTab);
+            } catch (e) {
+                showToast(`更新失败：${e.message}`, 'error');
+            }
+        }
+
+        async function validateApiKey(key) {
+            showToast(`正在验证 ${key}...`, 'info');
+            // TODO: 实现 API Key 验证逻辑
+            setTimeout(() => {
+                showToast('验证通过', 'success');
+            }, 1000);
+        }
+
+        function toggleAutoDedup(enabled) {
+            showToast(enabled ? '已启用自动去重' : '已禁用自动去重', 'success');
+        }
+
+        // ===== Bot 操作 =====
+        async function botAction(action, botName) {
+            try {
+                await fetch(API_BASE + '/api/bots/action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, bot_name: botName })
+                });
+                showToast(`已${getActionText(action)} ${botName}`, 'success');
+                await loadBots();
+                renderBotsPage();
+            } catch (e) {
+                showToast(`操作失败：${e.message}`, 'error');
+            }
+        }
+
+        async function startAllBots() {
+            await botAction('start', null);
+        }
+
+        function getActionText(action) {
+            const texts = { start: '启动', stop: '停止', restart: '重启' };
+            return texts[action] || action;
+        }
+
+        // ===== 新建 Bot =====
+        function openCreateBotModal() {
+            document.getElementById('createBotModal').style.display = 'flex';
+            document.getElementById('createBotResult').style.display = 'none';
+            // 清空表单
+            document.getElementById('newBotName').value = '';
+            document.getElementById('newBotToken').value = '';
+            document.getElementById('newBotClientId').value = '';
+            document.getElementById('newBotServerId').value = '';
+            document.getElementById('newBotChannel').value = '';
+            document.getElementById('newBotModel').value = 'qwen3.5-plus';
+        }
+
+        function closeCreateBotModal() {
+            document.getElementById('createBotModal').style.display = 'none';
+        }
+
+        // ===== 对话式 Bot 配置向导 =====
+        let wizardStep = 0;
+        let wizardData = {};
+
+        function openBotWizard() {
+            wizardStep = 0;
+            wizardData = {};
+            document.getElementById('botWizardModal').style.display = 'flex';
+            renderWizardStep();
+        }
+
+        function closeBotWizard() {
+            document.getElementById('botWizardModal').style.display = 'none';
+        }
+
+        function renderWizardStep() {
+            const content = document.getElementById('botWizardContent');
+            const nextBtn = document.getElementById('wizardNextBtn');
+
+            const steps = [
+                // Step 0: Bot 名字
+                {
+                    question: '1️⃣ 你的 Bot 叫什么名字？',
+                    hint: '例如：小助手、客服小妹、运营顾问',
+                    type: 'input',
+                    key: 'botName'
+                },
+                // Step 1: 为谁服务
+                {
+                    question: '2️⃣ 你的 Bot 为谁服务？',
+                    hint: '请填写：姓名/称呼、身份、公司/团队等<br>例如："为张三服务，他是 XX 公司的创始人"',
+                    type: 'textarea',
+                    key: 'userService'
+                },
+                // Step 2: 性格
+                {
+                    question: '3️⃣ 你的 Bot 是什么性格？',
+                    hint: '选择 1-2 个主要特质',
+                    type: 'select',
+                    key: 'personality',
+                    options: [
+                        { value: '活泼开朗', emoji: '🌟', desc: '热情、爱聊天、善于带动气氛' },
+                        { value: '沉稳专业', emoji: '🧠', desc: '冷静、逻辑清晰、给人可靠感' },
+                        { value: '严谨细致', emoji: '💼', desc: '认真、注重细节、不轻易犯错' },
+                        { value: '亲和友善', emoji: '🤝', desc: '温和、有耐心、容易相处' },
+                        { value: '高效直接', emoji: '⚡', desc: '话少、直奔主题、不绕弯子' },
+                        { value: '幽默风趣', emoji: '🎨', desc: '爱开玩笑、语言生动、有趣' },
+                        { value: '谦逊低调', emoji: '🙇', desc: '谦虚、不张扬、善于倾听' },
+                        { value: '自信果断', emoji: '👑', desc: '有主见、决策快、不犹豫' }
+                    ]
+                },
+                // Step 3: 行业场景
+                {
+                    question: '4️⃣ 你的 Bot 用于什么行业/场景？',
+                    hint: '选择最接近的一个',
+                    type: 'select',
+                    key: 'industry',
+                    options: [
+                        { value: '电商客服', emoji: '🛒', desc: '网店客服、商品咨询、售后处理' },
+                        { value: '教育培训', emoji: '📚', desc: '课程咨询、学习辅导、培训管理' },
+                        { value: '餐饮预订', emoji: '🍽️', desc: '餐厅预订、菜单推荐、外卖服务' },
+                        { value: '直播娱乐', emoji: '🎬', desc: '气氛控制、粉丝互动、内容运营' },
+                        { value: '企业办公', emoji: '🏢', desc: '行政助理、会议安排、文档处理' },
+                        { value: '医疗健康', emoji: '🏥', desc: '健康咨询、预约挂号、随访管理' },
+                        { value: '法律咨询', emoji: '⚖️', desc: '法律咨询、案件跟进、合同审核' },
+                        { value: '自定义', emoji: '🔧', desc: '完全自定义，空白模板' }
+                    ]
+                },
+                // Step 4: 核心职责
+                {
+                    question: '5️⃣ 请用一句话说说，你的 Bot 主要做什么？',
+                    hint: '例如："我是 XX 网店的客服助手，负责回答商品咨询"',
+                    type: 'input',
+                    key: 'coreDuty'
+                },
+                // Step 5: 确认
+                {
+                    question: '✅ 确认配置',
+                    hint: '请检查以下信息是否正确',
+                    type: 'confirm',
+                    key: 'confirm'
+                }
+            ];
+
+            const step = steps[wizardStep];
+
+            let inputHtml = '';
+
+            if (step.type === 'input') {
+                inputHtml = `<input type="text" id="wizardInput" class="form-input" placeholder="${step.hint}"
+                    style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary); font-size: 14px;">`;
+            } else if (step.type === 'textarea') {
+                inputHtml = `<textarea id="wizardInput" class="form-input" rows="3" placeholder="${step.hint}"
+                    style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid rgba(74, 158, 255, 0.2); background: var(--bg-secondary); color: var(--text-primary); font-size: 14px; resize: vertical;"></textarea>`;
+            } else if (step.type === 'select') {
+                inputHtml = `<div style="display: grid; gap: 8px;">${step.options.map(opt => `
+                    <label style="display: flex; align-items: center; padding: 12px; background: rgba(74, 158, 255, 0.05); border-radius: 8px; cursor: pointer;">
+                        <input type="${step.key === 'personality' ? 'checkbox' : 'radio'}" name="wizardSelect" value="${opt.value}" style="margin-right: 12px;">
+                        <span style="font-size: 18px; margin-right: 8px;">${opt.emoji}</span>
+                        <div>
+                            <div style="font-weight: 600; color: var(--neon-cyan);">${opt.value}</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">${opt.desc}</div>
+                        </div>
+                    </label>
+                `).join('')}</div>`;
+            } else if (step.type === 'confirm') {
+                inputHtml = `<div style="padding: 16px; background: rgba(74, 158, 255, 0.05); border-radius: 8px; font-size: 14px;">
+                    <div style="margin-bottom: 8px;"><b>Bot 名字</b>: ${wizardData.botName || '未填写'}</div>
+                    <div style="margin-bottom: 8px;"><b>服务对象</b>: ${wizardData.userService || '未填写'}</div>
+                    <div style="margin-bottom: 8px;"><b>性格</b>: ${wizardData.personality || '未填写'}</div>
+                    <div style="margin-bottom: 8px;"><b>行业</b>: ${wizardData.industry || '未填写'}</div>
+                    <div style="margin-bottom: 8px;"><b>核心职责</b>: ${wizardData.coreDuty || '未填写'}</div>
+                </div>`;
+            }
+
+            content.innerHTML = `
+                <div style="padding: 20px 0;">
+                    <div style="font-size: 16px; font-weight: 600; color: var(--neon-cyan); margin-bottom: 16px;">${step.question}</div>
+                    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">${step.hint}</div>
+                    ${inputHtml}
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                    <div style="font-size: 12px; color: var(--text-muted);">步骤 ${wizardStep + 1} / ${steps.length}</div>
+                    <div style="display: flex; gap: 8px;">
+                        ${wizardStep > 0 ? '<button class="btn btn-sm btn-secondary" onclick="wizardPrev()">上一步</button>' : ''}
+                    </div>
+                </div>
+            `;
+
+            nextBtn.style.display = 'block';
+            if (wizardStep === steps.length - 1) {
+                nextBtn.textContent = '完成';
+                nextBtn.onclick = wizardComplete;
+            } else {
+                nextBtn.textContent = '下一步';
+                nextBtn.onclick = wizardNext;
+            }
+        }
+
+        function wizardNext() {
+            const step = wizardStep;
+            const input = document.getElementById('wizardInput');
+            const selected = document.querySelector('input[name="wizardSelect"]:checked');
+
+            if (step === 0) wizardData.botName = input?.value.trim();
+            else if (step === 1) wizardData.userService = input?.value.trim();
+            else if (step === 2) wizardData.personality = selected?.value;
+            else if (step === 3) wizardData.industry = selected?.value;
+            else if (step === 4) wizardData.coreDuty = input?.value.trim();
+
+            // 验证
+            if (!wizardData.botName || !wizardData.userService || !wizardData.personality || !wizardData.industry || !wizardData.coreDuty) {
+                showToast('请填写所有必填项', 'error');
+                return;
+            }
+
+            wizardStep++;
+            renderWizardStep();
+        }
+
+        function wizardPrev() {
+            if (wizardStep > 0) {
+                wizardStep--;
+                renderWizardStep();
+            }
+        }
+
+        async function wizardComplete() {
+            // 调用 API 生成配置文件
+            try {
+                const res = await fetch(API_BASE + '/api/bots/wizard', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(wizardData)
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('botWizardContent').innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+                            <div style="font-size: 18px; font-weight: 600; color: var(--success); margin-bottom: 8px;">配置完成！</div>
+                            <div style="font-size: 14px; color: var(--text-muted);">
+                                已为 Bot 生成身份配置文件。<br>
+                                你可以在 Bot 管理页面查看详细配置。
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('wizardNextBtn').style.display = 'none';
+                    showToast('Bot 配置已生成', 'success');
+                } else {
+                    showToast(`生成失败：${data.error}`, 'error');
+                }
+            } catch (e) {
+                showToast(`请求失败：${e.message}`, 'error');
+            }
+        }
+
+        async function submitCreateBot() {
+            const name = document.getElementById('newBotName').value.trim();
+            const token = document.getElementById('newBotToken').value.trim();
+            const clientId = document.getElementById('newBotClientId').value.trim();
+            const serverId = document.getElementById('newBotServerId').value.trim();
+            const channel = document.getElementById('newBotChannel').value.trim();
+            const model = document.getElementById('newBotModel').value;
+
+            const resultDiv = document.getElementById('createBotResult');
+
+            // 验证必填项
+            if (!name || !token || !clientId || !serverId || !channel) {
+                resultDiv.style.display = 'block';
+                resultDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+                resultDiv.style.color = 'var(--error)';
+                resultDiv.innerHTML = '❌ 请填写所有必填字段';
+                return;
+            }
+
+            // 验证 Token 格式
+            if (!token.startsWith('MT') && !token.includes('.')) {
+                resultDiv.style.display = 'block';
+                resultDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+                resultDiv.style.color = 'var(--error)';
+                resultDiv.innerHTML = '❌ Bot Token 格式不正确';
+                return;
+            }
+
+            // 验证 Client ID 格式（应该是 17-19 位数字）
+            if (!/^\d{17,19}$/.test(clientId)) {
+                resultDiv.style.display = 'block';
+                resultDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+                resultDiv.style.color = 'var(--error)';
+                resultDiv.innerHTML = '❌ Client ID 格式不正确（应为 17-19 位数字）';
+                return;
+            }
+
+            // 验证 Server ID 格式（应该是 17-19 位数字）
+            if (!/^\d{17,19}$/.test(serverId)) {
+                resultDiv.style.display = 'block';
+                resultDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+                resultDiv.style.color = 'var(--error)';
+                resultDiv.innerHTML = '❌ Server ID 格式不正确（应为 17-19 位数字）';
+                return;
+            }
+
+            try {
+                // 创建 Bot
+                const res = await fetch(API_BASE + '/api/bots/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        token,
+                        client_id: clientId,
+                        server_id: serverId,
+                        channel_id: channel,
+                        model
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    resultDiv.style.display = 'block';
+                    resultDiv.style.background = 'rgba(0, 255, 136, 0.1)';
+                    resultDiv.style.color = 'var(--success)';
+                    resultDiv.innerHTML = `✅ ${name} 创建成功！正在启动...`;
+
+                    // 显示邀请链接
+                    const inviteUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&permissions=8&scope=bot%20applications.commands`;
+                    resultDiv.innerHTML += `<div style="margin-top: 12px; padding: 12px; background: rgba(74, 158, 255, 0.1); border-radius: 6px; font-size: 12px;">
+                <div style="font-weight: 600; margin-bottom: 4px;">🔗 邀请链接：</div>
+                <a href="${inviteUrl}" target="_blank" style="color: var(--neon-blue); word-break: break-all;">${inviteUrl}</a>
+                <div style="margin-top: 8px; color: var(--text-muted);">点击此链接邀请 Bot 加入服务器 <b>${serverId}</b></div>
+            </div>`;
+
+                    // 自动启动 Bot
+                    setTimeout(async () => {
+                        await botAction('start', name);
+                        closeCreateBotModal();
+                        showToast(`${name} 已创建并启动`, 'success');
+                        await loadBots();
+                        renderBotsPage();
+                    }, 1500);
+                } else {
+                    resultDiv.style.display = 'block';
+                    resultDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+                    resultDiv.style.color = 'var(--error)';
+                    resultDiv.innerHTML = `❌ 创建失败：${data.error || '未知错误'}`;
+                }
+            } catch (e) {
+                resultDiv.style.display = 'block';
+                resultDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+                resultDiv.style.color = 'var(--error)';
+                resultDiv.innerHTML = `❌ 请求失败：${e.message}`;
+            }
+        }
+
+        // ===== 辅助函数 =====
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function getBotIcon(name) {
+            const icons = {
+                '编导': '🎬', '剪辑': '✂️', '美工': '🎨',
+                '场控': '🎮', '客服': '💬', '运营': '📊',
+                '渠道': '📡', '小小谦': '🤖'
+            };
+            return icons[name] || '🤖';
+        }
+
+        function getPriorityBadge(priority) {
+            const colors = {
+                'critical': 'style="color: #ef4444;"',
+                'high': 'style="color: #f59e0b;"',
+                'normal': 'style="color: #4a9eff;"',
+                'low': 'style="color: #888;"'
+            };
+            const p = priority || 'normal';
+            return `<span ${colors[p] || colors['normal']}>${p}</span>`;
+        }
+
+        function getCategoryName(category) {
+            const names = {
+                'development': '💻 开发工具',
+                'research': '🔍 研究搜索',
+                'productivity': '⚡ 生产力',
+                'analysis': '📊 数据分析',
+                'security': '🛡️ 安全防护',
+                'creative': '🎨 创意工具',
+                'communication': '💬 沟通协作',
+                'automation': '🤖 自动化'
+            };
+            return names[category] || category;
+        }
+
+        // 技能搜索过滤
+        function filterSkills() {
+            const searchText = document.getElementById('skillSearch').value.toLowerCase();
+            const categoryFilter = document.getElementById('skillCategoryFilter').value;
+
+            let filtered = state.skills || [];
+
+            // 按搜索文本过滤
+            if (searchText) {
+                filtered = filtered.filter(skill => {
+                    const name = (skill.name || '').toLowerCase();
+                    const desc = (skill.description || '').toLowerCase();
+                    const tags = (skill.tags || []).join(' ').toLowerCase();
+                    const id = (skill.id || '').toLowerCase();
+                    return name.includes(searchText) || desc.includes(searchText) ||
+                           tags.includes(searchText) || id.includes(searchText);
+                });
+            }
+
+            // 按分类过滤
+            if (categoryFilter) {
+                filtered = filtered.filter(skill => (skill.category || '') === categoryFilter);
+            }
+
+            renderSkillsPage(filtered);
+        }
+
+        // 激活技能（添加到注册表）
+        async function activateSkill(skillId) {
+            try {
+                const res = await fetch(API_BASE + `/api/skills/${skillId}/install`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showToast(`技能 ${skillId} 已激活`, 'success');
+                    await loadSkills();
+                    renderSkillsPage();
+                } else {
+                    showToast(`激活失败：${result.message || '未知错误'}`, 'error');
+                }
+            } catch (e) {
+                showToast(`激活失败：${e.message}`, 'error');
+            }
+        }
+
+        function updateStats(bots, taskStats) {
+            state.bots = Object.values(bots);
+            if (state.currentPage === 'dashboard') {
+                renderDashboard();
+            } else if (state.currentPage === 'bots') {
+                renderBotsPage();
+            }
+        }
+
+        async function refreshData() {
+            await loadStats();
+            await loadBots();
+            await loadTasks();
+            await loadSkills();
+            if (state.currentPage === 'dashboard') renderDashboard();
+            showToast('数据已刷新', 'success');
+        }
+
+        // ===== Toast 通知 =====
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.className = 'toast show ' + type;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // ===== 技能操作 =====
+        async function installSkill(skillId) {
+            try {
+                const res = await fetch(API_BASE + `/api/skills/${skillId}/install`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showToast(`技能 ${skillId} 已安装`, 'success');
+                    await loadSkills();
+                    renderSkillsPage();
+                } else {
+                    showToast(`安装失败：${result.error || '未知错误'}`, 'error');
+                }
+            } catch (e) {
+                showToast(`安装失败：${e.message}`, 'error');
+            }
+        }
+
+        async function uninstallSkill(skillId) {
+            if (!confirm(`确定要卸载技能 ${skillId} 吗？`)) return;
+
+            try {
+                const res = await fetch(API_BASE + `/api/skills/${skillId}`, {
+                    method: 'DELETE'
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showToast(`技能 ${skillId} 已卸载`, 'success');
+                    await loadSkills();
+                    renderSkillsPage();
+                } else {
+                    showToast(`卸载失败：${result.error || '未知错误'}`, 'error');
+                }
+            } catch (e) {
+                showToast(`卸载失败：${e.message}`, 'error');
+            }
+        }
+
+        function viewSkill(id) { showToast('技能详情待实现', 'warning'); }
+
+        // ===== 任务操作 =====
+        let selectedPriority = 'normal';
+
+        function openTaskModal() {
+            selectedPriority = 'normal';
+            document.getElementById('taskTitleInput').value = '';
+            document.getElementById('taskDescInput').value = '';
+            document.getElementById('taskBotSelect').value = '编导';
+            // 重置优先级按钮状态
+            document.querySelectorAll('.priority-btn').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+            });
+            document.querySelector('.priority-btn[data-priority="normal"]').classList.remove('btn-secondary');
+            document.querySelector('.priority-btn[data-priority="normal"]').classList.add('btn-primary');
+            document.getElementById('taskModal').classList.add('active');
+        }
+
+        function closeTaskModal() {
+            document.getElementById('taskModal').classList.remove('active');
+        }
+
+        function selectPriority(btn) {
+            selectedPriority = btn.dataset.priority;
+            document.querySelectorAll('.priority-btn').forEach(b => {
+                b.classList.remove('btn-primary');
+                b.classList.add('btn-secondary');
+            });
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-primary');
+        }
+
+        async function createTask() {
+            const title = document.getElementById('taskTitleInput').value.trim();
+            const description = document.getElementById('taskDescInput').value.trim();
+            const assigned_to = document.getElementById('taskBotSelect').value;
+
+            if (!title) {
+                showToast('请输入任务标题', 'warning');
+                return;
+            }
+
+            try {
+                const res = await fetch(API_BASE + '/api/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, description, assigned_to, priority: selectedPriority })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showToast('任务创建成功', 'success');
+                    closeTaskModal();
+                    await loadTasks();
+                    renderTasksPage();
+                } else {
+                    showToast(`创建失败：${result.detail || '未知错误'}`, 'error');
+                }
+            } catch (e) {
+                showToast(`创建失败：${e.message}`, 'error');
+            }
+        }
+
+        // ===== 任务详情 =====
+        let currentTaskId = null;
+
+        async function viewTask(id) {
+            currentTaskId = id;
+            try {
+                const res = await fetch(API_BASE + '/api/tasks');
+                const data = await res.json();
+                const task = (data.tasks || []).find(t => t.id === id);
+
+                if (!task) {
+                    showToast('任务未找到', 'error');
+                    return;
+                }
+
+                const content = document.getElementById('taskDetailContent');
+                content.innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">任务 ID</div>
+                        <div style="font-family: monospace; color: var(--neon-blue);">${task.id}</div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">标题</div>
+                        <div style="font-size: 16px; font-weight: 600;">${task.title || '未命名'}</div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">描述</div>
+                        <div style="color: var(--text-secondary);">${task.description || '无描述'}</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">分配给</div>
+                            <div>${getBotIcon(task.assigned_to)} ${task.assigned_to || '未分配'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">优先级</div>
+                            <div style="color: ${getPriorityColor(task.priority)}">${task.priority || 'normal'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">状态</div>
+                            <span class="status-badge ${task.status}">${task.status || 'pending'}</span>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">创建时间</div>
+                            <div style="font-size: 12px;">${formatTimestamp(task.created_at)}</div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('taskDetailModal').classList.add('active');
+            } catch (e) {
+                showToast(`加载失败：${e.message}`, 'error');
+            }
+        }
+
+        function closeTaskDetailModal() {
+            document.getElementById('taskDetailModal').classList.remove('active');
+        }
+
+        async function deleteCurrentTask() {
+            if (!currentTaskId || !confirm('确定要删除这个任务吗？')) return;
+
+            try {
+                const res = await fetch(API_BASE + `/api/tasks/${currentTaskId}`, {
+                    method: 'DELETE'
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    showToast('任务已删除', 'success');
+                    closeTaskDetailModal();
+                    await loadTasks();
+                    renderTasksPage();
+                } else {
+                    showToast(`删除失败：${result.error || '未知错误'}`, 'error');
+                }
+            } catch (e) {
+                showToast(`删除失败：${e.message}`, 'error');
+            }
+        }
+
+        function getPriorityColor(priority) {
+            const colors = { 'critical': '#ef4444', 'high': '#f59e0b', 'normal': '#4a9eff', 'low': '#888' };
+            return colors[priority] || colors['normal'];
+        }
+
+        function formatTimestamp(ts) {
+            if (!ts) return '未知';
+            try {
+                const date = new Date(ts);
+                return date.toLocaleString('zh-CN');
+            } catch {
+                return ts;
+            }
+        }
+
+        // ===== 技能详情 =====
+        let currentSkillId = null;
+
+        async function viewSkill(id) {
+            console.log('viewSkill called with id:', id);
+            currentSkillId = id;
+            try {
+                // 获取技能版本历史
+                const res = await fetch(API_BASE + `/api/skills/${id}/versions`);
+                console.log('API response status:', res.status);
+                const data = await res.json();
+                console.log('API response data:', data);
+
+                const content = document.getElementById('skillDetailContent');
+                console.log('content element:', content);
+
+                if (data.versions && data.versions.length > 0) {
+                    // 有版本数据的技能
+                    console.log('rendering versions');
+                    renderSkillVersions(content, data);
+                } else if (data.installed && data.content) {
+                    // 已安装技能，显示内容和基本信息
+                    console.log('rendering installed info');
+                    renderSkillInstalledInfo(content, data);
+                } else {
+                    // 无版本数据，显示基本信息
+                    console.log('rendering basic info');
+                    renderSkillBasicInfo(content, id);
+                }
+
+                const modal = document.getElementById('skillDetailModal');
+                console.log('modal element:', modal);
+                modal.classList.add('active');
+                console.log('modal active class added');
+            } catch (e) {
+                console.error('viewSkill error:', e);
+                showToast(`加载失败：${e.message}`, 'error');
+            }
+        }
+
+        function renderSkillInstalledInfo(content, data) {
+            const skillName = data.skill_name || data.id;
+            const contentText = data.content || '';
+
+            // 解析技能名称和描述
+            let name = skillName;
+            let description = '';
+            const lines = contentText.split('\n');
+            for (let i = 0; i < Math.min(10, lines.length); i++) {
+                if (lines[i].startsWith('# ')) {
+                    name = lines[i].substring(2).trim();
+                } else if (lines[i].trim() && !lines[i].startsWith('#')) {
+                    description = lines[i].trim();
+                    break;
+                }
+            }
+
+            content.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">技能名称</div>
+                    <div style="font-size: 16px; font-weight: 600;">📦 ${name}</div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">技能描述</div>
+                    <div style="color: var(--text-secondary);">${description || '暂无描述'}</div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">状态</div>
+                    <div style="color: var(--neon-green);">✅ 已安装</div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">技能内容</div>
+                    <div style="background: var(--bg-secondary); padding: 12px; border-radius: 6px; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; white-space: pre-wrap;">${contentText}</div>
+                </div>
+                <div style="margin-bottom: 20px; padding: 16px; background: rgba(0, 240, 255, 0.1); border-radius: 8px; border: 1px solid rgba(0, 240, 255, 0.2);">
+                    <div style="font-size: 13px; color: var(--neon-blue);">
+                        💡 提示：该技能已安装但尚未建立版本历史。使用"优化技能"功能可以创建版本记录。
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSkillVersions(content, data) {
+            const versions = data.versions;
+            const currentVersion = versions.find(v => !v.deprecated) || versions[versions.length - 1];
+
+            content.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">技能名称</div>
+                    <div style="font-size: 16px; font-weight: 600;">📦 ${data.skill_name || id}</div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">当前版本</div>
+                    <div style="font-size: 14px; color: var(--neon-green);">${currentVersion?.version || 'v1'}</div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">版本历史</div>
+                    <div style="max-height: 200px; overflow-y: auto;">
+                        ${versions.map(v => `
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(74, 158, 255, 0.1);">
+                                <div>
+                                    <div style="font-size: 13px;">${v.version}</div>
+                                    <div style="font-size: 11px; color: var(--text-muted);">${new Date(v.created_at).toLocaleString('zh-CN')}</div>
+                                </div>
+                                <div>
+                                    ${v.deprecated ?
+                                        '<span style="font-size: 11px; color: var(--text-muted);">已弃用</span>' :
+                                        '<span style="font-size: 11px; color: var(--neon-green);">当前版本</span>'
+                                    }
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">总版本数</div>
+                        <div style="font-size: 18px; font-weight: 600;">${data.total_versions || versions.length}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">成功率</div>
+                        <div style="font-size: 18px; font-weight: 600; color: var(--neon-green);">${(currentVersion?.success_rate * 100 || 0).toFixed(0)}%</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSkillBasicInfo(content, id) {
+            content.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">技能 ID</div>
+                    <div style="font-family: monospace; color: var(--neon-blue);">${id}</div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">状态</div>
+                    <div style="color: var(--neon-green);">✅ 已安装</div>
+                </div>
+                <div style="margin-bottom: 20px; padding: 16px; background: var(--bg-secondary); border-radius: 8px;">
+                    <div style="font-size: 14px; color: var(--text-secondary);">
+                        该技能已安装到工作区，但尚未进行版本追踪。
+                        <br><br>
+                        技能版本追踪需要通过 skill_evolution 模块创建，当技能被优化时会自动建立版本历史。
+                    </div>
+                </div>
+                <div style="text-align: center; padding: 20px; color: var(--text-muted);">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📦</div>
+                    <div>暂无版本数据</div>
+                </div>
+            `;
+        }
+
+        function closeSkillDetailModal() {
+            document.getElementById('skillDetailModal').classList.remove('active');
+        }
+
+        async function optimizeCurrentSkill() {
+            if (!currentSkillId) return;
+
+            if (!confirm('确定要优化这个技能吗？AI 将分析并创建新版本。')) return;
+
+            try {
+                const res = await fetch(API_BASE + `/api/skills/${currentSkillId}/optimize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: 'Manual optimization' })
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    showToast(`技能已优化到 ${result.new_version}`, 'success');
+                    closeSkillDetailModal();
+                    await loadSkills();
+                } else {
+                    showToast(`优化失败：${result.error || '未知错误'}`, 'error');
+                }
+            } catch (e) {
+                showToast(`优化失败：${e.message}`, 'error');
+            }
+        }
+
+        // ===== 技能编辑功能 =====
+        async function editCurrentSkill() {
+            if (!currentSkillId) return;
+
+            try {
+                // 获取技能详情
+                const res = await fetch(API_BASE + `/api/skills/${currentSkillId}`);
+                const skill = await res.json();
+
+                // 填充表单
+                document.getElementById('editSkillId').value = currentSkillId;
+                document.getElementById('editSkillName').value = skill.name || '';
+                document.getElementById('editSkillDescription').value = skill.description || '';
+                document.getElementById('editSkillContent').value = skill.content || '';
+
+                document.getElementById('skillEditModal').classList.add('active');
+            } catch (e) {
+                // 如果 API 不存在，使用模拟数据
+                document.getElementById('editSkillId').value = currentSkillId;
+                document.getElementById('editSkillName').value = `Skill: ${currentSkillId}`;
+                document.getElementById('editSkillDescription').value = '技能描述';
+                document.getElementById('editSkillContent').value = '# 技能内容\n\n在此编辑技能内容...';
+
+                document.getElementById('skillEditModal').classList.add('active');
+            }
+        }
+
+        function closeSkillEditModal() {
+            document.getElementById('skillEditModal').classList.remove('active');
+        }
+
+        async function saveSkillChanges() {
+            if (!currentSkillId) return;
+
+            const name = document.getElementById('editSkillName').value;
+            const description = document.getElementById('editSkillDescription').value;
+            const content = document.getElementById('editSkillContent').value;
+
+            try {
+                const res = await fetch(API_BASE + `/api/skills/${currentSkillId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, description, content })
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    showToast('技能已保存', 'success');
+                    closeSkillEditModal();
+                    closeSkillDetailModal();
+                    await loadSkills();
+                } else {
+                    showToast(`保存失败：${result.error || '未知错误'}`, 'error');
+                }
+            } catch (e) {
+                showToast(`保存失败：${e.message}`, 'error');
+            }
+        }
+
+        // ===== 配置验证 =====
+        async function validateConfig() {
+            try {
+                const res = await fetch(API_BASE + '/api/config/validate', {
+                    method: 'POST'
+                });
+                const result = await res.json();
+                if (result.valid) {
+                    showToast('配置验证通过', 'success');
+                } else {
+                    showToast(`配置问题：${result.message || '请检查配置'}`, 'warning');
+                }
+            } catch (e) {
+                showToast(`验证失败：${e.message}`, 'error');
+            }
+        }
+
+        // ===== 图表管理 =====
+        let taskStatusChartInstance = null;
+        let botTaskChartInstance = null;
+
+        function renderAnalyticsPage() {
+            if (!state.stats) return;
+
+            // 更新 KPI
+            const tasks = state.stats.tasks || {};
+            document.getElementById('analyticsTotalTasks').textContent = tasks.total || 0;
+
+            const completionRate = tasks.total > 0 ?
+                Math.round((tasks.completed || 0) / tasks.total * 100) : 0;
+            document.getElementById('analyticsCompletionRate').textContent = completionRate + '%';
+
+            const activeBots = (state.stats.bots?.details || []).filter(b => b.status === 'online').length;
+            const totalBots = state.stats.bots?.total || state.bots.length || 8;
+            const botActivity = totalBots > 0 ?
+                Math.round(activeBots / totalBots * 100) : 0;
+            document.getElementById('analyticsBotActivity').textContent = botActivity + '%';
+
+            // 构建 by_status 对象（适配后端返回的扁平结构）
+            const byStatus = tasks.by_status && Object.keys(tasks.by_status).length > 0 ?
+                tasks.by_status :
+                {
+                    pending: tasks.pending || 0,
+                    in_progress: tasks.in_progress || 0,
+                    completed: tasks.completed || 0,
+                    failed: tasks.failed || 0
+                };
+
+            // 渲染任务状态饼图
+            renderTaskStatusChart(byStatus);
+
+            // 渲染 Bot 任务量柱状图
+            renderBotTaskChart(tasks.by_bot || {});
+
+            // 加载任务详情列表
+            loadTaskDetails();
+        }
+
+        // 加载任务详情列表
+        async function loadTaskDetails() {
+            const container = document.getElementById('analyticsTaskList');
+            container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">加载中...</div>';
+
+            try {
+                const res = await fetch(API_BASE + '/api/tasks');
+                const data = await res.json();
+                const tasks = data.tasks || [];
+
+                if (tasks.length === 0) {
+                    container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">暂无任务数据</div>';
+                    return;
+                }
+
+                // 按状态分组显示
+                const statusGroups = {
+                    'pending': { label: '待处理', color: '#f59e0b', tasks: [] },
+                    'in_progress': { label: '执行中', color: '#4a9eff', tasks: [] },
+                    'completed': { label: '已完成', color: '#10b981', tasks: [] },
+                    'failed': { label: '失败', color: '#ef4444', tasks: [] }
+                };
+
+                tasks.forEach(task => {
+                    const status = task.status || 'pending';
+                    if (statusGroups[status]) {
+                        statusGroups[status].tasks.push(task);
+                    }
+                });
+
+                let html = '<div style="display: flex; flex-direction: column; gap: 16px;">';
+
+                // 按状态分组渲染
+                Object.values(statusGroups).forEach(group => {
+                    if (group.tasks.length > 0) {
+                        html += `
+                            <div>
+                                <div style="font-size: 13px; font-weight: 600; color: ${group.color}; margin-bottom: 8px; padding-left: 8px; border-left: 3px solid ${group.color};">
+                                    ${group.label} (${group.tasks.length})
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                        `;
+
+                        group.tasks.forEach(task => {
+                            const createdDate = task.created_at ? task.created_at.split('T')[0] : '-';
+                            const assignedBot = task.assigned_to || '未分配';
+                            const priorityBadge = getPriorityBadge(task.priority);
+
+                            html += `
+                                <div style="display: flex; align-items: center; padding: 12px; background: rgba(74, 158, 255, 0.05); border-radius: 8px; gap: 12px;">
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="font-size: 13px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            ${escapeHtml(task.title || '未命名任务')}
+                                        </div>
+                                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                                            📅 ${createdDate}  |  🤖 ${assignedBot}  |  ${priorityBadge}
+                                        </div>
+                                        ${task.description ? `<div style="font-size: 12px; color: var(--text-muted); margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(task.description)}</div>` : ''}
+                                    </div>
+                                    <button class="btn btn-sm btn-secondary" onclick="viewTask('${task.id}')" style="white-space: nowrap;">查看</button>
+                                </div>
+                            `;
+                        });
+
+                        html += `
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+
+                html += '</div>';
+                container.innerHTML = html;
+
+            } catch (e) {
+                console.error('加载任务详情失败:', e);
+                container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--error);">加载失败：' + e.message + '</div>';
+            }
+        }
+
+        function renderTaskStatusChart(byStatus) {
+            const ctx = document.getElementById('taskStatusChart').getContext('2d');
+
+            if (taskStatusChartInstance) {
+                taskStatusChartInstance.destroy();
+            }
+
+            const data = {
+                labels: ['待处理', '执行中', '已完成', '失败'],
+                datasets: [{
+                    data: [
+                        byStatus.pending || 0,
+                        byStatus.in_progress || 0,
+                        byStatus.completed || 0,
+                        byStatus.failed || 0
+                    ],
+                    backgroundColor: [
+                        '#f59e0b',
+                        '#4a9eff',
+                        '#10b981',
+                        '#ef4444'
+                    ],
+                    borderWidth: 0
+                }]
+            };
+
+            taskStatusChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#a5b4fc',
+                                padding: 20,
+                                font: { size: 12 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderBotTaskChart(byBot) {
+            const ctx = document.getElementById('botTaskChart').getContext('2d');
+
+            if (botTaskChartInstance) {
+                botTaskChartInstance.destroy();
+            }
+
+            const labels = Object.keys(byBot).map(name => {
+                const icons = { '编导': '🎬', '剪辑': '✂️', '美工': '🎨', '场控': '🎮', '客服': '💬', '运营': '📊', '渠道': '📡', '小小谦': '🤖' };
+                return (icons[name] || '🤖') + ' ' + name;
+            });
+            const data = Object.values(byBot);
+
+            botTaskChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '任务数',
+                        data: data,
+                        backgroundColor: 'rgba(74, 158, 255, 0.6)',
+                        borderColor: '#4a9eff',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(74, 158, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#888'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#a5b4fc'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ===== 启动 =====
+        init();
+    </script>
+</body>
+</html>

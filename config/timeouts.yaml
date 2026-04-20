@@ -1,0 +1,19 @@
+# Phoenix Bot 超时配置（单位：秒）
+
+# 按意图类型配置超时时间
+timeouts:
+  inquiry: 30       # 简单询问 30 秒
+  task: 300         # 执行任务 5 分钟
+  status: 30        # 状态查询 30 秒
+  chat: 30          # 闲聊 30 秒
+  forward: 60       # 转发 60 秒
+
+# 重试配置
+retries:
+  max_retries: 2            # 最大重试次数
+  backoff_multiplier: 2     # 重试间隔倍数
+
+# 任务清理配置
+cleanup:
+  completed_max_age: 3600   # 已完成任务保留时间（秒）
+  check_interval: 60        # 超时检查间隔（秒）

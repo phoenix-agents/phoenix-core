@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phoenix Core - Neural Dashboard v3.0</title>
+    <style>
+        /* ===== Phoenix Core v3.0 - 融合 OpenClaw 专业设计 ===== */
+
+        :root {
+            /* 色彩系统 - 融合方案 */
+            --bg-primary: #0a0f1f;
+            --bg-secondary: #16162a;
+            --bg-card: #1a1f3f;
+            --bg-hover: #2a2a4a;
+            --bg-active: #3a3a6a;
+
+            /* 霓虹强调色 */
+            --neon-cyan: #00f0ff;
+            --neon-blue: #4a9eff;
+            --neon-pink: #ff00ff;
+            --neon-green: #00ff88;
+
+            /* 状态色 */
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+
+            /* 文字 */
+            --text-primary: #eaeaea;
+            --text-secondary: #a5b4fc;
+            --text-muted: #888;
+
+            /* 尺寸系统 - 学习 OpenClaw */
+            --sidebar-width: 260px;
+            --header-height: 48px;
+            --input-height: 56px;
+
+            /* 间距系统 */
+            --spacing-4: 4px;
+            --spacing-8: 8px;
+            --spacing-12: 12px;
+            --spacing-16: 16px;
+            --spacing-20: 20px;
+            --spacing-24: 24px;
+
+            /* 圆角系统 */
+            --radius-sm: 4px;
+            --radius-md: 6px;
+            --radius-lg: 8px;
+            --radius-xl: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            /*  subtle 网格背景 */
+            background-image:
+                linear-gradient(rgba(0, 240, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.02) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* ===== 侧边栏 - 学习 OpenClaw 布局 ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-secondary);
+            border-right: 1px solid rgba(74, 158, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: var(--spacing-16);
+            border-bottom: 1px solid rgba(74, 158, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-section {
+            padding: var(--spacing-8) var(--spacing-16);
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: var(--spacing-16);
+        }
+
+        .sidebar-section:first-child {
+            margin-top: 0;
+        }
+
+        /* 列表项 - 专业设计 */
+        .sidebar-list {
+            padding: var(--spacing-8);
+        }
+
+        .sidebar-item {
+            padding: var(--spacing-12) var(--spacing-16);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-4);
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .sidebar-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .sidebar-item.active {
+            background: var(--bg-active);
+            border-left: 3px solid var(--neon-cyan);
+        }
+
+        .sidebar-item-label {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .sidebar-item-actions {
+            display: flex;
+            gap: var(--spacing-4);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .sidebar-item:hover .sidebar-item-actions {
+            opacity: 1;
+        }
+
+        .sidebar-item-action-btn {
+            padding: var(--spacing-4) var(--spacing-8);
+            font-size: 14px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        .sidebar-item-action-btn.edit {
+            color: var(--neon-blue);
+        }
+
+        .sidebar-item-action-btn.edit:hover {
+            background: var(--neon-blue);
+            color: white;
+        }
+
+        .sidebar-item-action-btn.delete {
+            color: var(--error);
+        }
+
+        .sidebar-item-action-btn.delete:hover {
+            background: var(--error);
+            color: white;
+        }
+
+        .sidebar-new-btn {
+            padding: var(--spacing-12) var(--spacing-16);
+            margin: var(--spacing-8) var(--spacing-16);
+            background: transparent;
+            border: 1px dashed rgba(74, 158, 255, 0.3);
+            border-radius: var(--radius-lg);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .sidebar-new-btn:hover {
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+        /* ===== 主内容区 ===== */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-left: var(--sidebar-width);
+            height: 100vh;
+        }
+
+        /* Header - 专业尺寸 */
+        .header {
+            height: var(--header-height);
+            padding: var(--spacing-16) var(--spacing-24);
+            background: var(--bg-secondary);
+            border-bottom: 1px solid rgba(74, 158, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .status {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-8);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* KPI 统计区 - 改进布局 */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--spacing-24);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--spacing-16);
+            margin-bottom: var(--spacing-24);
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-20);
+            border: 1px solid rgba(0, 240, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg,
+                transparent,
+                var(--neon-cyan),
+                var(--neon-blue),
+                transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+            border-color: rgba(0, 240, 255, 0.3);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card h3 {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: var(--spacing-12);
+        }
+
+        .stat-card .value {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-card .meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: var(--spacing-8);
+        }
+
+        /* 图表区 */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-16);
+            margin-bottom: var(--spacing-24);
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-20);
+            border: 1px solid rgba(74, 158, 255, 0.15);
+        }
+
+        .chart-card h3 {
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-20);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-8);
+        }
+
+        .chart-card h3::before {
+            content: '';
+            width: 3px;
+            height: 16px;
+            background: linear-gradient(180deg, var(--neon-cyan), var(--neon-blue));
+            border-radius: 2px;
+        }
+
+        .chart-placeholder {
+            height: 280px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* 失败模式分析 */
+        .failure-patterns {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-12);
+        }
+
+        .pattern-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: var(--spacing-20);
+            border-radius: var(--radius-md);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
+        }
+
+        .pattern-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: scale(1.02);
+        }
+
+        .pattern-item .name {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-8);
+        }
+
+        .pattern-item .count {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--error);
+            text-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .pattern-item .percentage {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: var(--spacing-4);
+        }
+
+        .pattern-item .trend {
+            font-size: 11px;
+            margin-top: var(--spacing-12);
+            padding: var(--spacing-4) var(--spacing-8);
+            border-radius: var(--radius-sm);
+            display: inline-block;
+        }
+
+        .pattern-item .trend.up {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+        }
+
+        .pattern-item .trend.down {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        /* 技能分类 */
+        .skills-section {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-20);
+            border: 1px solid rgba(0, 240, 255, 0.1);
+            margin-top: var(--spacing-24);
+        }
+
+        .skills-section h3 {
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-20);
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--spacing-16);
+        }
+
+        .skill-category {
+            background: rgba(0, 0, 0, 0.2);
+            padding: var(--spacing-16);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(74, 158, 255, 0.1);
+        }
+
+        .skill-category h4 {
+            font-size: 13px;
+            color: var(--neon-cyan);
+            margin-bottom: var(--spacing-12);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-8);
+        }
+
+        .skill-category h4::before {
+            content: '';
+            width: 3px;
+            height: 12px;
+            background: var(--neon-cyan);
+            border-radius: 2px;
+        }
+
+        .skill-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-8);
+        }
+
+        .skill-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-8) var(--spacing-12);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: var(--radius-sm);
+            transition: all 0.2s;
+        }
+
+        .skill-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .skill-item .name {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .skill-item .success-rate {
+            font-size: 12px;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-active);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-blue);
+        }
+
+        /* 响应式 */
+        @media (max-width: 1400px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar { width: 220px; }
+            .main { margin-left: 220px; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .failure-patterns { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边栏 - 学习 OpenClaw 专业布局 -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">🦞 PHOENIX CORE</div>
+        </div>
+
+        <div class="sidebar-section">我的 Bots</div>
+        <div class="sidebar-list" id="bot-list">
+            <div class="sidebar-item active">
+                <span class="sidebar-item-label">场控 · Qwen</span>
+                <div class="sidebar-item-actions">
+                    <button class="sidebar-item-action-btn edit">✎</button>
+                    <button class="sidebar-item-action-btn delete">×</button>
+                </div>
+            </div>
+            <div class="sidebar-item">
+                <span class="sidebar-item-label">客服 · Qwen</span>
+                <div class="sidebar-item-actions">
+                    <button class="sidebar-item-action-btn edit">✎</button>
+                    <button class="sidebar-item-action-btn delete">×</button>
+                </div>
+            </div>
+            <div class="sidebar-item">
+                <span class="sidebar-item-label">运营 · Qwen</span>
+                <div class="sidebar-item-actions">
+                    <button class="sidebar-item-action-btn edit">✎</button>
+                    <button class="sidebar-item-action-btn delete">×</button>
+                </div>
+            </div>
+        </div>
+        <button class="sidebar-new-btn" id="new-bot">+ 新建 Bot</button>
+
+        <div class="sidebar-section">技能库</div>
+        <div class="sidebar-list" id="skill-list">
+            <div class="sidebar-item">
+                <span class="sidebar-item-label">UI/UX 设计原则</span>
+            </div>
+            <div class="sidebar-item">
+                <span class="sidebar-item-label">数据可视化</span>
+            </div>
+            <div class="sidebar-item">
+                <span class="sidebar-item-label">赛博朋克风格</span>
+            </div>
+            <div class="sidebar-item">
+                <span class="sidebar-item-label">CARP 原则</span>
+            </div>
+            <div class="sidebar-item">
+                <span class="sidebar-item-label">60-30-10 配色</span>
+            </div>
+        </div>
+        <button class="sidebar-new-btn" id="new-skill">+ 导入技能</button>
+
+        <div class="sidebar-section">快捷操作</div>
+        <div class="sidebar-list">
+            <div class="sidebar-item" onclick="openDemo()">
+                <span class="sidebar-item-label">🎮 演示模式</span>
+            </div>
+            <div class="sidebar-item" onclick="toggleTheme()">
+                <span class="sidebar-item-label">🌓 切换主题</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main">
+        <header class="header">
+            <h1>Dashboard · 场控 Bot</h1>
+            <div class="status">
+                <span class="status-dot"></span>
+                <span>运行中</span>
+            </div>
+        </header>
+
+        <div class="content">
+            <!-- KPI 统计 -->
+            <section class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <h3>总任务数</h3>
+                    <div class="value">2,847</div>
+                    <div class="meta">2,103 已完成</div>
+                </div>
+                <div class="stat-card">
+                    <h3>待处理任务</h3>
+                    <div class="value">127</div>
+                    <div class="meta">等待分析</div>
+                </div>
+                <div class="stat-card">
+                    <h3>活跃技能</h3>
+                    <div class="value">17</div>
+                    <div class="meta">34 个版本</div>
+                </div>
+                <div class="stat-card">
+                    <h3>平均成功率</h3>
+                    <div class="value">78.4%</div>
+                    <div class="meta">全部技能</div>
+                </div>
+            </section>
+
+            <!-- 图表区 -->
+            <section class="charts-grid">
+                <div class="chart-card">
+                    <h3>任务评估分数趋势</h3>
+                    <div class="chart-placeholder">
+                        <svg viewBox="0 0 400 200" style="width: 80%; height: 80%;">
+                            <defs>
+                                <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#00f0ff;stop-opacity:0.3" />
+                                    <stop offset="100%" style="stop-color:#00f0ff;stop-opacity:0" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M0,150 Q50,120 100,100 T200,80 T300,60 T400,40 L400,200 L0,200 Z" fill="url(#chartGradient)"/>
+                            <path d="M0,150 Q50,120 100,100 T200,80 T300,60 T400,40" fill="none" stroke="#00f0ff" stroke-width="2"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>技能成功率演变</h3>
+                    <div class="chart-placeholder">
+                        <div style="display: flex; gap: 40px; align-items: center;">
+                            <div style="text-align: center;">
+                                <div style="width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(#00f0ff 0% 78%, #1a1f3f 78% 100%); box-shadow: 0 0 20px rgba(0,240,255,0.3);"></div>
+                                <div style="color: var(--neon-cyan); margin-top: 12px; font-size: 13px;">UI Design 78%</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(#ff00ff 0% 85%, #1a1f3f 85% 100%); box-shadow: 0 0 20px rgba(255,0,255,0.3);"></div>
+                                <div style="color: var(--neon-pink); margin-top: 12px; font-size: 13px;">Core 85%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 失败模式分析 -->
+            <section class="chart-card" style="margin-bottom: 24px;">
+                <h3>失败模式分析</h3>
+                <div class="failure-patterns">
+                    <div class="pattern-item">
+                        <div class="name">技能未触发</div>
+                        <div class="count">42</div>
+                        <div class="percentage">35% 的失败</div>
+                        <div class="trend down">↓ 减少中</div>
+                    </div>
+                    <div class="pattern-item">
+                        <div class="name">执行超时</div>
+                        <div class="count">38</div>
+                        <div class="percentage">31% 的失败</div>
+                        <div class="trend">→ 稳定</div>
+                    </div>
+                    <div class="pattern-item">
+                        <div class="name">上下文超限</div>
+                        <div class="count">25</div>
+                        <div class="percentage">21% 的失败</div>
+                        <div class="trend down">↓ 减少中</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 技能分类 -->
+            <section class="skills-section">
+                <h3>技能库 · 按分类查看</h3>
+                <div class="skills-grid">
+                    <div class="skill-category">
+                        <h4>UI/UX 设计</h4>
+                        <div class="skill-list">
+                            <div class="skill-item">
+                                <span class="name">CARP 原则</span>
+                                <span class="success-rate">SR: 95%</span>
+                            </div>
+                            <div class="skill-item">
+                                <span class="name">60-30-10 配色</span>
+                                <span class="success-rate">SR: 88%</span>
+                            </div>
+                            <div class="skill-item">
+                                <span class="name">12 列网格</span>
+                                <span class="success-rate">SR: 92%</span>
+                            </div>
+                            <div class="skill-item">
+                                <span class="name">赛博朋克风格</span>
+                                <span class="success-rate">SR: 97%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="skill-category">
+                        <h4>核心技能</h4>
+                        <div class="skill-list">
+                            <div class="skill-item">
+                                <span class="name">Memory Manager</span>
+                                <span class="success-rate">SR: 99%</span>
+                            </div>
+                            <div class="skill-item">
+                                <span class="name">Skill Executor</span>
+                                <span class="success-rate">SR: 85%</span>
+                            </div>
+                            <div class="skill-item">
+                                <span class="name">Task Orchestrator</span>
+                                <span class="success-rate">SR: 78%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // 演示交互
+        function openDemo() {
+            alert('🎮 演示模式 - 点击 KPI 卡片查看动画效果\n\n✨  hover 卡片查看发光效果\n📊 图表区域展示数据可视化\n🎨 融合 OpenClaw 专业布局');
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+            alert('🌓 主题切换功能 - 可扩展浅色模式');
+        }
+
+        // 侧边栏交互
+        document.querySelectorAll('.sidebar-item:not([onclick])').forEach(item => {
+            item.addEventListener('click', function() {
+                // 移除同组其他选中状态
+                const siblings = this.parentElement.querySelectorAll('.sidebar-item');
+                siblings.forEach(sib => sib.classList.remove('active'));
+                // 添加选中状态
+                this.classList.add('active');
+            });
+        });
+
+        // 操作按钮事件
+        document.querySelectorAll('.edit').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                alert('✎ 编辑功能 - 可扩展模态框编辑');
+            });
+        });
+
+        document.querySelectorAll('.delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (confirm('确定要删除吗？')) {
+                    alert('× 删除功能 - 可扩展删除逻辑');
+                }
+            });
+        });
+
+        // KPI 卡片点击动画
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('click', function() {
+                this.style.animation = 'none';
+                setTimeout(() => this.style.animation = 'pulse 0.5s ease', 10);
+            });
+        });
+    </script>
+</body>
+</html>
