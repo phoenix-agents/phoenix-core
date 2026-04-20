@@ -1917,8 +1917,9 @@ async def main():
         logger.info("Received shutdown signal")
         stop_event.set()
 
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        # loop.add_signal_handler(sig, signal_handler)  # Windows not supported
+    # Windows 不支持信号处理
+    # for sig in (signal.SIGINT, signal.SIGTERM):
+    #     loop.add_signal_handler(sig, signal_handler)  # Windows not supported
 
     # Initialize and start
     await gateway.initialize()
